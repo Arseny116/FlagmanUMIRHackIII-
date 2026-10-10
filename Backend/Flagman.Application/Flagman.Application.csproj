@@ -10,9 +10,4 @@
     <ProjectReference Include="..\Flagman.Domain\Flagman.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Abstractions\" />
-    <Folder Include="Features\" />
-  </ItemGroup>
-
 </Project>
