@@ -10,24 +10,24 @@ export const PRODUCTS = [
 
 export const DISHES = [
   { id: 1, name: 'Пицца Маргарита', price: 550, composition: [
-    { productId: 4, quantity: 0.25 },
-    { productId: 2, quantity: 0.15 },
-    { productId: 3, quantity: 0.10 },
+    { productId: 4, productName: 'Тесто',  quantity: 0.25, unit: 'кг' },
+    { productId: 2, productName: 'Сыр',    quantity: 0.15, unit: 'кг' },
+    { productId: 3, productName: 'Томаты', quantity: 0.10, unit: 'кг' },
   ]},
   { id: 2, name: 'Курица гриль', price: 690, composition: [
-    { productId: 1, quantity: 0.30 },
-    { productId: 5, quantity: 0.05 },
+    { productId: 1, productName: 'Курица', quantity: 0.30, unit: 'кг' },
+    { productId: 5, productName: 'Соус',   quantity: 0.05, unit: 'л'  },
   ]},
   { id: 3, name: 'Пицца Пепперони', price: 650, composition: [
-    { productId: 4, quantity: 0.25 },
-    { productId: 2, quantity: 0.20 },
-    { productId: 5, quantity: 0.08 },
-    { productId: 7, quantity: 0.10 },
+    { productId: 4, productName: 'Тесто',  quantity: 0.25, unit: 'кг' },
+    { productId: 2, productName: 'Сыр',    quantity: 0.20, unit: 'кг' },
+    { productId: 5, productName: 'Соус',   quantity: 0.08, unit: 'л'  },
+    { productId: 7, productName: 'Бекон',  quantity: 0.10, unit: 'кг' },
   ]},
   { id: 4, name: 'Салат Цезарь', price: 490, composition: [
-    { productId: 6, quantity: 0.15 },
-    { productId: 1, quantity: 0.12 },
-    { productId: 2, quantity: 0.03 },
+    { productId: 6, productName: 'Салат',  quantity: 0.15, unit: 'кг' },
+    { productId: 1, productName: 'Курица', quantity: 0.12, unit: 'кг' },
+    { productId: 2, productName: 'Сыр',    quantity: 0.03, unit: 'кг' },
   ]},
 ];
 
