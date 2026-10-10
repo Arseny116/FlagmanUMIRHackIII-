@@ -1,6 +1,6 @@
 <Solution>
   <Project Path="../Flagman.Application/Flagman.Application.csproj" Id="9189ce39-cd23-42dd-8241-07c4509eda31" />
   <Project Path="../Flagman.Domain/Flagman.Domain.csproj" Id="961161b9-7b60-4faa-b4e4-0f0cb57b0c3e" />
-  <Project Path="../Flagman.Infrastucture/Flagman.Infrastucture.csproj" Id="ac362e77-9f48-4ecc-a750-03bb8890c514" />
+  <Project Path="../Flagman.Infrastucture/Flagman.Infrastructure.csproj" Id="ac362e77-9f48-4ecc-a750-03bb8890c514" />
   <Project Path="Flagman.csproj" />
 </Solution>
