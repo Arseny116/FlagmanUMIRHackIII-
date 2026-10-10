@@ -12,7 +12,7 @@ import SuppliesPage from './pages/SuppliesPage';
 import OrdersPage from './pages/OrdersPage';
 import StopListPage from './pages/StopListPage';
 import HotOffersPage from './pages/HotOffersPage';
-
+import logo from './assets/portrait.jpg';
 function ThemeToggle() {
   const { colorMode, toggleColorMode } = useColorMode();
   return (
