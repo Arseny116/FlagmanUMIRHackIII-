@@ -1,10 +1,14 @@
 import { Box, Heading, Text } from '@chakra-ui/react';
 
-export default function StockPage() {
+export default function HotOffersPage() {
   return (
-    <Box p={5} bg="white" shadow="sm" borderRadius="md">
-      <Heading size="lg" mb={2}>Остатки и партии</Heading>
-      <Text color="gray.600">Здесь будет таблица продуктов и партий с цветовой индикацией сроков годности.</Text>
+    <Box p={6} bg="cardBg" border="1px solid" borderColor="appBorder" borderRadius="lg">
+      <Heading size="md" mb={2} color="#e4e4e7" fontWeight="600">
+        Горячие предложения
+      </Heading>
+      <Text color="appMuted" fontSize="sm">
+        Здесь будут рекомендации по приоритетной продаже блюд, у которых скоро истекают продукты.
+      </Text>
     </Box>
   );
 }

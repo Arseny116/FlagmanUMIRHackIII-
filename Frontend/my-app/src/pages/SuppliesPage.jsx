@@ -1,10 +1,14 @@
 import { Box, Heading, Text } from '@chakra-ui/react';
 
-export default function HotOffersPage() {
+export default function SuppliesPage() {
   return (
-    <Box p={5} bg="white" shadow="sm" borderRadius="md">
-      <Heading size="lg" mb={2}>Горячие предложения</Heading>
-      <Text color="gray.600">Здесь будут рекомендации по приоритетной продаже блюд, у которых скоро истекают продукты.</Text>
+    <Box p={6} bg="cardBg" border="1px solid" borderColor="appBorder" borderRadius="lg">
+      <Heading size="md" mb={2} color="appText" fontWeight="600">
+        Поставки
+      </Heading>
+      <Text color="appMuted" fontSize="sm">
+        Здесь будет форма новой поставки и история поступлений.
+      </Text>
     </Box>
   );
 }

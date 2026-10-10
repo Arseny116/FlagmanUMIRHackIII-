@@ -1,43 +1,72 @@
-import { Box, Flex, Link, Heading, Container } from '@chakra-ui/react';
+import {
+  Box, Flex, Link, Heading, Container, HStack,
+  IconButton, useColorMode, Tooltip,
+} from '@chakra-ui/react';
+import { SunIcon, MoonIcon } from '@chakra-ui/icons';
 import { Link as RouterLink, Routes, Route } from 'react-router-dom';
 
 import DashboardPage from './pages/DashboardPage';
+import MenuPage from './pages/MenuPage';
 import StockPage from './pages/StockPage';
 import SuppliesPage from './pages/SuppliesPage';
 import OrdersPage from './pages/OrdersPage';
 import StopListPage from './pages/StopListPage';
 import HotOffersPage from './pages/HotOffersPage';
 
+function ThemeToggle() {
+  const { colorMode, toggleColorMode } = useColorMode();
+  return (
+    <Tooltip label={colorMode === 'dark' ? 'Светлая тема' : 'Тёмная тема'} hasArrow>
+      <IconButton
+        aria-label="Переключить тему"
+        icon={colorMode === 'dark' ? <SunIcon /> : <MoonIcon />}
+        onClick={toggleColorMode}
+        variant="ghost"
+        color="appMuted"
+        _hover={{ color: 'appAccent', bg: 'transparent' }}
+        size="sm"
+      />
+    </Tooltip>
+  );
+}
+
 export default function App() {
   return (
-    <Box minH="100vh" bg="gray.50">
-      <Flex 
-        as="header" 
-        bg="blue.600" 
-        color="white" 
-        p={4} 
-        align="center" 
+    <Box minH="100vh" bg="appBg" color="appText">
+      <Flex
+        as="header"
+        bg="panelBg"
+        px={6}
+        py={3}
+        align="center"
         justify="space-between"
-        boxShadow="sm"
+        borderBottom="1px solid"
+        borderColor="appBorder"
       >
-        <Heading size="md">Флагман: Мониторинг</Heading>
-        <Flex gap={4} fontSize="sm" fontWeight="medium">
-          <Link as={RouterLink} to="/" _hover={{ textDecoration: 'underline' }}>Дашборд</Link>
-          <Link as={RouterLink} to="/stock" _hover={{ textDecoration: 'underline' }}>Остатки</Link>
-          <Link as={RouterLink} to="/supplies" _hover={{ textDecoration: 'underline' }}>Поставки</Link>
-          <Link as={RouterLink} to="/orders" _hover={{ textDecoration: 'underline' }}>Заказы</Link>
-          <Link as={RouterLink} to="/stoplist" _hover={{ textDecoration: 'underline' }}>Стоп-лист</Link>
-          <Link as={RouterLink} to="/hot-offers" _hover={{ textDecoration: 'underline' }}>Горячие</Link>
-        </Flex>
+        <Heading size="md" color="appText" fontWeight="600" letterSpacing="tight">
+          Флагман: Мониторинг
+        </Heading>
+
+        <HStack gap={5} fontSize="sm" fontWeight="500">
+          <Link as={RouterLink} to="/"           color="appMuted" _hover={{ color: 'appAccent' }}>Дашборд</Link>
+          <Link as={RouterLink} to="/menu"       color="appMuted" _hover={{ color: 'appAccent' }}>Меню</Link>
+          <Link as={RouterLink} to="/stock"      color="appMuted" _hover={{ color: 'appAccent' }}>Остатки</Link>
+          <Link as={RouterLink} to="/supplies"   color="appMuted" _hover={{ color: 'appAccent' }}>Поставки</Link>
+          <Link as={RouterLink} to="/orders"     color="appMuted" _hover={{ color: 'appAccent' }}>Заказы</Link>
+          <Link as={RouterLink} to="/stoplist"   color="appMuted" _hover={{ color: 'appAccent' }}>Стоп-лист</Link>
+          <Link as={RouterLink} to="/hot-offers" color="appMuted" _hover={{ color: 'appAccent' }}>Горячие</Link>
+          <ThemeToggle />
+        </HStack>
       </Flex>
 
-      <Container maxW="container.xl" pt={6}>
+      <Container maxW="container.xl" py={8}>
         <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/stock" element={<StockPage />} />
-          <Route path="/supplies" element={<SuppliesPage />} />
-          <Route path="/orders" element={<OrdersPage />} />
-          <Route path="/stoplist" element={<StopListPage />} />
+          <Route path="/"           element={<DashboardPage />} />
+          <Route path="/menu"       element={<MenuPage />} />
+          <Route path="/stock"      element={<StockPage />} />
+          <Route path="/supplies"   element={<SuppliesPage />} />
+          <Route path="/orders"     element={<OrdersPage />} />
+          <Route path="/stoplist"   element={<StopListPage />} />
           <Route path="/hot-offers" element={<HotOffersPage />} />
         </Routes>
       </Container>
