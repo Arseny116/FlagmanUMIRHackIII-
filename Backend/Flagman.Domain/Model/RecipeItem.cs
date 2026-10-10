@@ -1,7 +1,6 @@
 ﻿using Flagman.Domain.Abstractions;
-using Flagman.Domain.Model;
 
-namespace Domain.Entities;
+namespace Flagman.Domain.Model;
 
 public class RecipeItem : Entity
 {

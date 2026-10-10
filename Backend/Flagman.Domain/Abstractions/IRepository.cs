@@ -1,13 +1,10 @@
-using System.Linq.Expressions;
-
 namespace Flagman.Domain.Abstractions;
 
-public interface IRepository<T> where T : Entity
+public interface IRepository<TEntity> where TEntity : Entity
 {
-    Task<T?> GetByIdAsync(Guid id, CancellationToken ct = default);
-    Task<IReadOnlyList<T>> GetAllAsync(CancellationToken ct = default);
-    Task<IReadOnlyList<T>> FindAsync(Expression<Func<T, bool>> predicate, CancellationToken ct = default);
-    Task AddAsync(T entity, CancellationToken ct = default);
-    void Update(T entity);
-    void Remove(T entity);
+    Task<IReadOnlyList<TEntity>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<TEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task AddAsync(TEntity entity, CancellationToken cancellationToken = default);
+    Task<bool> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }

@@ -1,12 +1,10 @@
-﻿using Domain.Entities;
-using Flagman.Domain.Abstractions;
+﻿using Flagman.Domain.Abstractions;
 
-namespace Flagman.Domain.Model
+namespace Flagman.Domain.Model;
+
+public class Dish : Entity
 {
-    public class Dish : Entity
-    {
-        public string Name { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
 
-        public ICollection<RecipeItem> RecipeItems { get; set; } = new List<RecipeItem>();
-    }
+    public ICollection<RecipeItem> RecipeItems { get; set; } = new List<RecipeItem>();
 }

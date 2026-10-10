@@ -2,5 +2,5 @@ namespace Flagman.Domain.Abstractions;
 
 public abstract class Entity
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; } = Guid.NewGuid();
 }
