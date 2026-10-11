@@ -26,12 +26,15 @@ public sealed class Supply : Entity
 
     public IReadOnlyCollection<Batch> Batches => _batches;
 
-    public static Supply Create(string name, DateTimeOffset createdAt)
+    public static Supply Create(Guid id, string name, DateTimeOffset createdAt)
     {
+        if (id == Guid.Empty) throw new ArgumentException("Id продукта не задан.", nameof(id));
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
         return new Supply(Guid.NewGuid(), name, createdAt);
     }
+
+    public static Supply Create(string name, DateTimeOffset createdAt) => Create(name, createdAt);
 
     /// <summary>Каждая позиция поставки становится отдельной партией: ExpiresAt = CreatedAt + срок хранения.</summary>
     public Batch AddBatch(Product product, Quantity quantity, ShelfLife shelfLife)
