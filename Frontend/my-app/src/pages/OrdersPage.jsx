@@ -1,11 +1,32 @@
 import {
   Box, Heading, Text, VStack, HStack, Button, Divider,
-  IconButton, useToast,
+  IconButton, useToast, Badge,
 } from '@chakra-ui/react';
-import { AddIcon, MinusIcon, DeleteIcon } from '@chakra-ui/icons';
+import { AddIcon, MinusIcon, DeleteIcon, WarningIcon } from '@chakra-ui/icons';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { useCart } from '../context/useCart';
 import { api } from '../api/client';
+
+function OrderRejectionBody({ missing }) {
+  return (
+    <VStack align="stretch" spacing={2} mt={1}>
+      {missing.map((m, i) => (
+        <HStack key={i} align="flex-start" spacing={2}>
+          <Box as="span" color="red.500" fontWeight="bold" lineHeight="1.2">•</Box>
+          <Box>
+            <Text fontSize="sm" fontWeight="600" color="gray.800">
+              {m.productName}
+            </Text>
+            <HStack spacing={3} fontSize="xs" color="gray.600">
+              <Text>нужно: <b>{m.need} {m.unit}</b></Text>
+              <Text>есть: <b>{m.have} {m.unit}</b></Text>
+            </HStack>
+          </Box>
+        </HStack>
+      ))}
+    </VStack>
+  );
+}
 
 export default function OrdersPage() {
   const { items, remove, setQuantity, clear, total, count } = useCart();
@@ -13,46 +34,62 @@ export default function OrdersPage() {
   const queryClient = useQueryClient();
 
   const orderMutation = useMutation({
-    mutationFn: async (cartItems) => {
-      const results = [];
-      for (const item of cartItems) {
-        const res = await api.createOrder({ dishId: item.dishId, quantity: item.quantity });
-        results.push({ item, res });
+    mutationFn: (cartItems) =>
+      api.createOrderBatch(cartItems.map((i) => ({
+        dishId: i.dishId,
+        quantity: i.quantity,
+      }))),
+
+    onSuccess: (res) => {
+      if (!res.ok) {
+        toast({
+          title: 'Заказ отклонён',
+          description: <OrderRejectionBody missing={res.missing ?? []} />,
+          status: 'error',
+          duration: 8000,
+          isClosable: true,
+          position: 'top-right',
+        });
+        return; 
       }
-      return results;
+
+      toast({
+        title: 'Заказ оформлен',
+        description: `Позиций: ${res.orders.length}`,
+        status: 'success',
+        duration: 3000,
+        position: 'top-right',
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['stock'] });
+      queryClient.invalidateQueries({ queryKey: ['batches'] });
+      queryClient.invalidateQueries({ queryKey: ['stoplist'] });
+      queryClient.invalidateQueries({ queryKey: ['hotOffers'] });
+      queryClient.invalidateQueries({ queryKey: ['alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      clear();
     },
-    onSuccess: (results) => {
-    const failed = results.filter(({ res }) => !res.ok);
-    if (failed.length > 0) {
-      const text = failed
-        .map(({ item, res }) =>
-          `${item.name}: не хватает ${res.missing.map((m) => `${m.productName} (нужно ${m.need} ${m.unit}, есть ${m.have} ${m.unit})`).join(', ')}`
-        )
-        .join('; ');
-      toast({ title: 'Заказ отклонён', description: text, status: 'error', duration: 6000, isClosable: true });
-      const failedIds = new Set(failed.map(({ item }) => item.dishId));
-      return;
-    }
-    toast({ title: 'Заказ оформлен', status: 'success', duration: 3000 });
-    queryClient.invalidateQueries({ queryKey: ['stock'] });
-    queryClient.invalidateQueries({ queryKey: ['batches'] });
-    queryClient.invalidateQueries({ queryKey: ['stoplist'] });
-    queryClient.invalidateQueries({ queryKey: ['hotOffers'] });
-    clear();
-  },
-});
+
+    onError: (err) => {
+      toast({
+        title: 'Ошибка сети',
+        description: err.message,
+        status: 'error',
+        duration: 5000,
+      });
+    },
+  });
 
   const submitOrder = () => {
-    for (const item of items) {
-      orderMutation.mutate({ dishId: item.dishId, quantity: item.quantity });
-    }
+    if (!items.length) return;
+    orderMutation.mutate(items);
   };
 
   if (items.length === 0) {
     return (
       <Box p={6} bg="cardBg" border="1px solid" borderColor="appBorder" borderRadius="lg">
         <Heading size="md" mb={2} color="appText" fontWeight="600">
-          Заказы и меню
+          Корзина
         </Heading>
         <Text color="appMuted" fontSize="sm">
           Корзина пуста. Добавьте блюда на странице «Меню».
@@ -61,11 +98,18 @@ export default function OrdersPage() {
     );
   }
 
+  const isPending = orderMutation.isPending;
+
   return (
     <Box p={6} bg="cardBg" border="1px solid" borderColor="appBorder" borderRadius="lg">
-      <Heading size="md" mb={4} color="appText" fontWeight="600">
-        Корзина
-      </Heading>
+      <HStack justify="space-between" mb={4}>
+        <Heading size="md" color="appText" fontWeight="600">
+          Корзина
+        </Heading>
+        <Badge colorScheme="purple" fontSize="sm" px={2} py={1}>
+          {count} шт
+        </Badge>
+      </HStack>
 
       <VStack align="stretch" spacing={3} divider={<Divider borderColor="appBorder" />}>
         {items.map((item) => (
@@ -83,6 +127,7 @@ export default function OrdersPage() {
                 variant="outline"
                 borderColor="appBorder"
                 color="appText"
+                isDisabled={isPending}
                 onClick={() => setQuantity(item.dishId, item.quantity - 1)}
               />
               <Text color="appText" minW="30px" textAlign="center">
@@ -95,6 +140,7 @@ export default function OrdersPage() {
                 variant="outline"
                 borderColor="appBorder"
                 color="appText"
+                isDisabled={isPending}
                 onClick={() => setQuantity(item.dishId, item.quantity + 1)}
               />
               <IconButton
@@ -104,6 +150,7 @@ export default function OrdersPage() {
                 variant="ghost"
                 color="appMuted"
                 _hover={{ color: 'red.400' }}
+                isDisabled={isPending}
                 onClick={() => remove(item.dishId)}
               />
             </HStack>
@@ -127,7 +174,7 @@ export default function OrdersPage() {
         bg="appAccent"
         color="white"
         _hover={{ opacity: 0.9 }}
-        isLoading={orderMutation.isPending}
+        isLoading={isPending}
         loadingText="Оформляем..."
         onClick={submitOrder}
       >

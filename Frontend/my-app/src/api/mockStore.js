@@ -147,3 +147,74 @@ export function createOrder({ dishId, quantity = 1 }) {
   store.orders.push(order);
   return { ok: true, order };
 }
+
+function checkAvailability(items) {
+  const needs = {}; 
+
+  for (const { dishId, quantity } of items) {
+    const dish = DISHES.find((d) => d.id === dishId);
+    if (!dish) return { ok: false, error: `Блюдо #${dishId} не найдено`, missing: [] };
+
+    for (const need of dish.composition) {
+      const key = need.productId;
+      const product = productById(key);
+
+      if (!needs[key]) {
+        needs[key] = {
+          productId: key,
+          productName: product?.name ?? `Продукт #${key}`,
+          unit: product?.unit ?? '',
+          need: 0,
+        };
+      }
+      needs[key].need += need.quantity * quantity;
+    }
+  }
+
+  const missing = [];
+  for (const key of Object.keys(needs)) {
+    const { need, ...rest } = needs[key];
+    const have = getStock().find((s) => s.id === Number(key))?.totalQuantity ?? 0;
+    if (have < need) {
+      missing.push({ ...rest, need: Number(need.toFixed(3)), have: Number(have.toFixed(3)) });
+    }
+  }
+
+  return { ok: missing.length === 0, missing };
+}
+
+export function createOrderBatch(items) {
+  const check = checkAvailability(items);
+  if (!check.ok) {
+    return { ok: false, error: check.error ?? 'Не хватает ингредиентов', missing: check.missing };
+  }
+
+  const created = [];
+  for (const { dishId, quantity } of items) {
+    const dish = DISHES.find((d) => d.id === dishId);
+
+    for (const need of dish.composition) {
+      let toWriteOff = need.quantity * quantity;
+      const batches = getBatches(need.productId).sort((a, b) => a.hoursLeft - b.hoursLeft);
+      for (const b of batches) {
+        if (toWriteOff <= 0) break;
+        const take = Math.min(b.quantity, toWriteOff);
+        const real = store.batches.find((x) => x.id === b.id);
+        if (real) real.quantity -= take;
+        toWriteOff -= take;
+      }
+    }
+
+    const order = {
+      id: store.nextIds.order++,
+      dishId,
+      dishName: dish.name,
+      quantity,
+      createdAt: new Date().toISOString(),
+    };
+    store.orders.push(order);
+    created.push(order);
+  }
+
+  return { ok: true, orders: created };
+}

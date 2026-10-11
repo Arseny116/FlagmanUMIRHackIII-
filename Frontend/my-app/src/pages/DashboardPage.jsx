@@ -183,7 +183,7 @@ export default function DashboardPage() {
       </SimpleGrid>
 
       <SimpleGrid columns={{ base: 1, lg: 3 }} spacing={4}>
-        <SectionCard title="Скоро истекает" linkTo="/stock" linkLabel="Все">
+        <SectionCard title="Скоро истекает" linkTo="/alerts" linkLabel="Все">
           {alertsQuery.isLoading ? (
             <Skeleton height="80px" borderRadius="md" />
           ) : alertsQuery.error ? (

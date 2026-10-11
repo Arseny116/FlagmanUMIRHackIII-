@@ -14,4 +14,5 @@ export const api = {
   createSupply:      wrap((body) => store.createSupply(body)),
   createOrder:       wrap((body) => store.createOrder(body)),
   getExpiringAlerts: wrap((hours = 24) => store.getExpiring(hours)),
+  createOrderBatch: wrap((items) => store.createOrderBatch(items)),
 };
