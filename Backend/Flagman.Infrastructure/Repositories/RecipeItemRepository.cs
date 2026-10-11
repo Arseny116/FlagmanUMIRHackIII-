@@ -1,5 +1,5 @@
 using Flagman.Domain.Abstractions;
-using Flagman.Domain.Model;
+using Flagman.Domain.Model.Dish;
 using Flagman.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 

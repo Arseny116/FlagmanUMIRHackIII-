@@ -1,6 +1,6 @@
 ﻿using Flagman.Domain.Abstractions;
 
-namespace Flagman.Domain.Model;
+namespace Flagman.Domain.Model.Dish;
 
 public class Dish : Entity
 {

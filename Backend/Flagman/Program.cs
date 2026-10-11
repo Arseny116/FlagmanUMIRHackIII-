@@ -13,8 +13,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseInMemoryDatabase("FlagmanDb"));
 builder.Services.AddScoped<IDishRepository, DishRepository>();
 builder.Services.AddScoped<IRecipeItemRepository, RecipeItemRepository>();
+builder.Services.AddScoped<IBatchRepository, BatchRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IUnitOfWork>(serviceProvider =>
+    serviceProvider.GetRequiredService<AppDbContext>());
 builder.Services.AddScoped<IDishService, DishService>();
 builder.Services.AddScoped<IRecipeItemService, RecipeItemService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
@@ -38,5 +43,6 @@ app.UseHttpsRedirection();
 
 app.MapDishEndpoints();
 app.MapRecipeItemEndpoints();
+app.MapOrderEndpoints();
 
 app.Run();

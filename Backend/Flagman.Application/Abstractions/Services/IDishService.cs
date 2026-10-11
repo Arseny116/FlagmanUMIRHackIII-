@@ -1,5 +1,5 @@
 using Flagman.Application.Common;
-using Flagman.Domain.Model;
+using Flagman.Domain.Model.Dish;
 
 namespace Flagman.Application.Abstractions.Services;
 

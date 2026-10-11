@@ -1,5 +1,5 @@
 using Flagman.Application.Abstractions.Services;
-using Flagman.Domain.Model;
+using Flagman.Domain.Model.Dish;
 
 namespace Flagman.Endpoints;
 
@@ -34,7 +34,7 @@ public static class DishEndpoints
             var result = await service.CreateAsync(request.Name, cancellationToken);
             return result.IsSuccess
                 ? Results.Created($"/api/dishes/{result.Value!.Id}", ToResponse(result.Value))
-                : Results.BadRequest(new { error = result.ErrorMessage });
+                : Results.BadRequest(new { error = result.Error });
         });
 
         dishes.MapPut("/{id:guid}", async (
@@ -47,8 +47,8 @@ public static class DishEndpoints
             return result.IsSuccess
                 ? Results.NoContent()
                 : result.IsNotFound
-                    ? Results.NotFound(new { error = result.ErrorMessage })
-                    : Results.BadRequest(new { error = result.ErrorMessage });
+                    ? Results.NotFound(new { error = result.Error })
+                    : Results.BadRequest(new { error = result.Error });
         });
 
         dishes.MapDelete("/{id:guid}", async (
@@ -59,7 +59,7 @@ public static class DishEndpoints
             var result = await service.DeleteAsync(id, cancellationToken);
             return result.IsSuccess
                 ? Results.NoContent()
-                : Results.NotFound(new { error = result.ErrorMessage });
+                : Results.NotFound(new { error = result.Error });
         });
 
         return endpoints;

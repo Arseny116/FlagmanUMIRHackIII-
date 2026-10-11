@@ -1,7 +1,7 @@
 using Flagman.Application.Abstractions.Services;
 using Flagman.Application.Common;
 using Flagman.Domain.Abstractions;
-using Flagman.Domain.Model;
+using Flagman.Domain.Model.Dish;
 
 namespace Flagman.Application.Services;
 

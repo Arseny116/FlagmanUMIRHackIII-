@@ -1,4 +1,4 @@
-﻿using Flagman.Domain.Model;
+﻿using Flagman.Domain.Model.Dish;
 
 namespace Flagman.Domain.Abstractions;
 

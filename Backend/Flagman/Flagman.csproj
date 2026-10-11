@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Flagman.Application\Flagman.Application.csproj" />
-    <ProjectReference Include="..\Flagman.Infrastucture\Flagman.Infrastucture.csproj" />
+    <ProjectReference Include="..\Flagman.Infrastructure\Flagman.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
