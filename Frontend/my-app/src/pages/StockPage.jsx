@@ -4,7 +4,7 @@ import {
 } from '@chakra-ui/react';
 import { ChevronDownIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { api } from '../api/client';
 
 function ExpiryBadge({ hours }) {
@@ -48,61 +48,61 @@ export default function StockPage() {
         </Thead>
         <Tbody>
           {stockQuery.data.map((item) => {
-            const isOpen = openId === item.id;
-            return (
-              <>
+              const isOpen = openId === item.id;
+              return (
+                <Fragment key={item.id}>
                 <Tr
-                  key={item.id}
                   cursor="pointer"
                   _hover={{ bg: 'blackAlpha.50' }}
                   onClick={() => setOpenId(isOpen ? null : item.id)}
                   borderColor="appBorder"
-                >
-                  <Td borderColor="appBorder">
-                    <Icon as={isOpen ? ChevronDownIcon : ChevronRightIcon} color="appMuted" />
-                  </Td>
-                  <Td borderColor="appBorder" color="appText" fontWeight="medium">{item.name}</Td>
-                  <Td isNumeric borderColor="appBorder" color="appText">
+                  >
+                <Td borderColor="appBorder">
+                <Icon as={isOpen ? ChevronDownIcon : ChevronRightIcon} color="appMuted" />
+                </Td>
+                <Td borderColor="appBorder" color="appText" fontWeight="medium">{item.name}</Td>
+                <Td isNumeric borderColor="appBorder" color="appText">
                     {item.totalQuantity.toFixed(2)} {item.unit}
-                  </Td>
-                  <Td isNumeric borderColor="appBorder" color="appMuted">{item.batchesCount}</Td>
-                </Tr>
-                <Tr key={`${item.id}-exp`} borderColor="appBorder">
-                  <Td colSpan={4} p={0} borderColor="appBorder">
-                    <Collapse in={isOpen} animateOpacity>
-                      <Box p={4} bg="appBg" borderRadius="md" m={2}>
-                        {batchesQuery.isLoading ? (
-                          <Spinner size="sm" />
-                        ) : batchesQuery.data?.length === 0 ? (
-                          <Text color="appMuted" fontSize="sm">Нет активных партий</Text>
-                        ) : (
-                          batchesQuery.data?.map((b) => (
-                            <Box
-                              key={b.id}
-                              display="flex"
-                              gap={4}
-                              align="center"
-                              py={2}
-                              borderBottom="1px solid"
-                              borderColor="appBorder"
-                              _last={{ borderBottom: 'none' }}
-                            >
-                              <Text color="appMuted" fontSize="sm" w="80px">#{b.id}</Text>
-                              <Text color="appText" fontSize="sm" w="120px">
-                                {b.quantity.toFixed(2)} {b.unit}
-                              </Text>
-                              <Text color="appMuted" fontSize="sm" flex={1}>
-                                до {new Date(b.expiresAt).toLocaleString('ru-RU')}
-                              </Text>
-                              <ExpiryBadge hours={b.hoursLeft} />
-                            </Box>
-                          ))
-                        )}
+                </Td>
+                <Td isNumeric borderColor="appBorder" color="appMuted">{item.batchesCount}</Td>
+              </Tr>
+
+              <Tr borderColor="appBorder">
+                <Td colSpan={4} p={0} borderColor="appBorder">
+                <Collapse in={isOpen} animateOpacity>
+                <Box p={4} bg="appBg" borderRadius="md" m={2}>
+                      {batchesQuery.isLoading ? (
+                      <Spinner size="sm" />
+                      ) : batchesQuery.data?.length === 0 ? (
+                      <Text color="appMuted" fontSize="sm">Нет активных партий</Text>
+                      ) : (
+                      batchesQuery.data?.map((b) => (
+                      <Box
+                          key={b.id}
+                          display="flex"
+                          gap={4}
+                          align="center"
+                          py={2}
+                          borderBottom="1px solid"
+                          borderColor="appBorder"
+                          _last={{ borderBottom: 'none' }}
+                        >
+                        <Text color="appMuted" fontSize="sm" w="80px">#{b.id}</Text>
+                        <Text color="appText" fontSize="sm" w="120px">
+                            {b.quantity.toFixed(2)} {b.unit}
+                        </Text>
+                        <Text color="appMuted" fontSize="sm" flex={1}>
+                            до {new Date(b.expiresAt).toLocaleString('ru-RU')}
+                        </Text>
+                        <ExpiryBadge hours={b.hoursLeft} />
                       </Box>
-                    </Collapse>
-                  </Td>
-                </Tr>
-              </>
+                      ))
+                     )}
+                    </Box>
+                  </Collapse>
+                </Td>
+              </Tr>
+            </Fragment>
             );
           })}
         </Tbody>

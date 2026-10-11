@@ -13,34 +13,34 @@ export default function OrdersPage() {
   const queryClient = useQueryClient();
 
   const orderMutation = useMutation({
-    mutationFn: (payload) => api.createOrder(payload),
-    onSuccess: (res) => {
-      if (!res.ok) {
-        const missingText = res.missing
-          .map((m) => `${m.productName}: нужно ${m.need} ${m.unit}, есть ${m.have} ${m.unit}`)
-          .join('; ');
-        toast({
-          title: 'Заказ отклонён',
-          description: `Не хватает: ${missingText}`,
-          status: 'error',
-          duration: 6000,
-          isClosable: true,
-        });
-        return;
+    mutationFn: async (cartItems) => {
+      const results = [];
+      for (const item of cartItems) {
+        const res = await api.createOrder({ dishId: item.dishId, quantity: item.quantity });
+        results.push({ item, res });
       }
-      toast({
-        title: 'Заказ оформлен',
-        description: `${res.order.dishName} × ${res.order.quantity}`,
-        status: 'success',
-        duration: 3000,
-      });
-      queryClient.invalidateQueries({ queryKey: ['stock'] });
-      queryClient.invalidateQueries({ queryKey: ['batches'] });
-      queryClient.invalidateQueries({ queryKey: ['stoplist'] });
-      queryClient.invalidateQueries({ queryKey: ['hotOffers'] });
-      clear();
+      return results;
     },
-  });
+    onSuccess: (results) => {
+    const failed = results.filter(({ res }) => !res.ok);
+    if (failed.length > 0) {
+      const text = failed
+        .map(({ item, res }) =>
+          `${item.name}: не хватает ${res.missing.map((m) => `${m.productName} (нужно ${m.need} ${m.unit}, есть ${m.have} ${m.unit})`).join(', ')}`
+        )
+        .join('; ');
+      toast({ title: 'Заказ отклонён', description: text, status: 'error', duration: 6000, isClosable: true });
+      const failedIds = new Set(failed.map(({ item }) => item.dishId));
+      return;
+    }
+    toast({ title: 'Заказ оформлен', status: 'success', duration: 3000 });
+    queryClient.invalidateQueries({ queryKey: ['stock'] });
+    queryClient.invalidateQueries({ queryKey: ['batches'] });
+    queryClient.invalidateQueries({ queryKey: ['stoplist'] });
+    queryClient.invalidateQueries({ queryKey: ['hotOffers'] });
+    clear();
+  },
+});
 
   const submitOrder = () => {
     for (const item of items) {
