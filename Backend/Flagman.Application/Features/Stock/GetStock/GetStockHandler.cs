@@ -1,4 +1,7 @@
-﻿namespace Flagman.Application.Features.Stock.GetStock;
+﻿using Flagman.Application.Abstractions;
+using Flagman.Domain.Abstractions;
+
+namespace Flagman.Application.Features.Stock.GetStock;
 
 internal sealed class GetStockHandler(IBatchRepository batches, TimeProvider clock)
     : IQueryHandler<GetStockQuery, IReadOnlyList<StockItemResponse>>
