@@ -1,4 +1,5 @@
-﻿using Flagman.Application.Abstractions;
+﻿using CSharpFunctionalExtensions;
+using Flagman.Application.Abstractions;
 using Flagman.Domain.Abstractions;
 using Flagman.Domain.Model;
 using Flagman.Domain.ValueObjects;
@@ -14,21 +15,21 @@ internal sealed class CreateSupplyHandler(
 {
     private const string DefaultUnit = "шт";
 
-    public async Task<Result<SupplyResponse>> HandleAsync(
+    public async Task<Result<SupplyResponse, Error>> HandleAsync(
         CreateSupplyCommand command,
         CancellationToken cancellationToken)
     {
         var errors = CreateSupplyValidator.Validate(command);
         if (errors.Count > 0)
-            return Error.Validation(errors);
+            return Result.Failure<SupplyResponse, Error>(Error.Validation(errors));
 
         var number = command.Number!.Trim();
 
         if (await supplies.ExistsByIdAsync(command.Id, cancellationToken))
-            return Error.Conflict("Supply.IdExists", $"Поставка с id {command.Id} уже зарегистрирована.");
+            return Result.Failure<SupplyResponse, Error>(Error.Conflict("Supply.IdExists", $"Поставка с id {command.Id} уже зарегистрирована."));
 
         if (await supplies.ExistsByNumberAsync(number, cancellationToken))
-            return Error.Conflict("Supply.NumberExists", $"Поставка с номером «{number}» уже зарегистрирована.");
+            return Result.Failure<SupplyResponse, Error>(Error.Conflict("Supply.NumberExists", $"Поставка с номером «{number}» уже зарегистрирована."));
 
         var items = command.Items!;
 
@@ -55,7 +56,7 @@ internal sealed class CreateSupplyHandler(
         supplies.Add(supply);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return supply.ToResponse();
+        return Result.Success<SupplyResponse, Error>(supply.ToResponse());
     }
 }
 

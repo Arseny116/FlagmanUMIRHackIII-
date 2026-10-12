@@ -2,6 +2,7 @@
 using Flagman.Domain.Model.Dish;
 using Flagman.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 
 namespace Flagman.Infrastructure.Repositories;
 
@@ -22,7 +23,7 @@ public class DishRepository(AppDbContext db) : IDishRepository
             .FirstOrDefaultAsync(dish => dish.Id == id, cancellationToken);
     }
 
-    public async Task AddAsync(Dish dish, CancellationToken cancellationToken = default)
+    public async Task AddAsync(Dish dish,  CancellationToken cancellationToken = default)
     {
         db.Dishes.Add(dish);
         await db.SaveChangesAsync(cancellationToken);

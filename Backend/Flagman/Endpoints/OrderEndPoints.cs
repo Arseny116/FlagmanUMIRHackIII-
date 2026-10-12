@@ -7,17 +7,16 @@ namespace Flagman.Endpoints;
 
 public static class OrderEndpoints
 {
-    public static IEndpointRouteBuilder MapOrderEndpoints(this IEndpointRouteBuilder endpoints)
+    public static RouteGroupBuilder MapOrderEndpoints(this RouteGroupBuilder api)
     {
-        var orders = endpoints.MapGroup("/api/orders");
+        var orders = api.MapGroup("/orders").WithTags("Orders");
 
         orders.MapPost("/", async (
             CreateOrderRequest request,
             IOrderService service,
             CancellationToken cancellationToken) =>
         {
-            Result<Order, Error> result =
-                await service.CreateAsync(request, cancellationToken);
+            Result<Order, Error> result = await service.CreateAsync(request, cancellationToken);
 
             if (result.IsSuccess)
             {
@@ -28,10 +27,7 @@ public static class OrderEndpoints
 
             return result.Error.Type switch
             {
-                ErrorType.NotFound => Results.NotFound(new
-                {
-                    error = result.Error.Description
-                }),
+                ErrorType.NotFound => Results.NotFound(new { error = result.Error.Description }),
                 ErrorType.Conflict => Results.Conflict(new
                 {
                     error = result.Error.Description,
@@ -45,7 +41,7 @@ public static class OrderEndpoints
             };
         });
 
-        return endpoints;
+        return api;
     }
 
     private static object ToResponse(Order order) => new

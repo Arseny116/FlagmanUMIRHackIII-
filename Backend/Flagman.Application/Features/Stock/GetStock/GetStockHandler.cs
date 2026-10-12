@@ -1,4 +1,5 @@
-﻿using Flagman.Application.Abstractions;
+﻿using CSharpFunctionalExtensions;
+using Flagman.Application.Abstractions;
 using Flagman.Domain.Abstractions;
 
 namespace Flagman.Application.Features.Stock.GetStock;
@@ -6,7 +7,7 @@ namespace Flagman.Application.Features.Stock.GetStock;
 internal sealed class GetStockHandler(IBatchRepository batches, TimeProvider clock)
     : IQueryHandler<GetStockQuery, IReadOnlyList<StockItemResponse>>
 {
-    public async Task<Result<IReadOnlyList<StockItemResponse>>> HandleAsync(
+    public async Task<Result<IReadOnlyList<StockItemResponse>, Error>> HandleAsync(
         GetStockQuery query,
         CancellationToken cancellationToken)
     {
@@ -34,6 +35,6 @@ internal sealed class GetStockHandler(IBatchRepository batches, TimeProvider clo
             .OrderBy(i => i.Name)
             .ToList();
 
-        return Result<IReadOnlyList<StockItemResponse>>.Success(items);
+        return Result.Success<IReadOnlyList<StockItemResponse>, Error>(items);
     }
 }

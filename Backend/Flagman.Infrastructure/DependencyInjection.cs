@@ -1,4 +1,6 @@
 ﻿using Flagman.Domain.Abstractions;
+using Flagman.Application.Abstractions.Services;
+using Flagman.Application.Services;
 using Flagman.Infrastructure.Persistence;
 using Flagman.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -13,15 +15,26 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("Postgres")
-            ?? throw new InvalidOperationException("Не задана строка подключения ConnectionStrings:Postgres.");
+        var connectionString = configuration.GetConnectionString("Postgres");
 
-        services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
+        services.AddDbContext<AppDbContext>(options =>
+        {
+            if (string.IsNullOrWhiteSpace(connectionString))
+                options.UseInMemoryDatabase("FlagmanDb");
+            else
+                options.UseNpgsql(connectionString);
+        });
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AppDbContext>());
 
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<ISupplyRepository, SupplyRepository>();
         services.AddScoped<IBatchRepository, BatchRepository>();
+        services.AddScoped<IDishRepository, DishRepository>();
+        services.AddScoped<IRecipeItemRepository, RecipeItemRepository>();
+        services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<IDishService, DishService>();
+        services.AddScoped<IRecipeItemService, RecipeItemService>();
+        services.AddScoped<IOrderService, OrderService>();
 
         return services;
     }

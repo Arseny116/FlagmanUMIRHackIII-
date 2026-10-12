@@ -2,6 +2,7 @@ using Flagman.Application.Abstractions.Services;
 using Flagman.Application.Common;
 using Flagman.Domain.Abstractions;
 using Flagman.Domain.Model.Dish;
+using System.Net;
 
 namespace Flagman.Application.Services;
 
@@ -19,6 +20,7 @@ public sealed class DishService(IDishRepository repository) : IDishService
 
     public async Task<ServiceResult<Dish>> CreateAsync(
         string name,
+        List<RecipeItem> recipeItems,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -26,7 +28,7 @@ public sealed class DishService(IDishRepository repository) : IDishService
             return ServiceResult<Dish>.Failure("Dish name is required.");
         }
 
-        var dish = new Dish { Name = name.Trim() };
+        var dish = Dish.Create(name.Trim(), recipeItems).Value;
         await repository.AddAsync(dish, cancellationToken);
         return ServiceResult<Dish>.Success(dish);
     }
@@ -34,6 +36,7 @@ public sealed class DishService(IDishRepository repository) : IDishService
     public async Task<ServiceResult<bool>> UpdateAsync(
         Guid id,
         string name,
+        List<RecipeItem> recipeItems,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -42,7 +45,7 @@ public sealed class DishService(IDishRepository repository) : IDishService
         }
 
         var updated = await repository.UpdateAsync(
-            new Dish { Id = id, Name = name.Trim() },
+             Dish.Create(name.Trim(), recipeItems).Value,
             cancellationToken);
 
         return updated

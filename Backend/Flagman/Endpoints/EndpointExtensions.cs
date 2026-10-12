@@ -6,6 +6,9 @@ public static class EndpointExtensions
     {
         var api = app.MapGroup("/api");
 
+        api.MapDishEndpoints();
+        api.MapRecipeItemEndpoints();
+        api.MapOrderEndpoints();
         api.MapSupplyEndpoints();
         api.MapStockEndpoints();
 

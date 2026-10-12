@@ -5,9 +5,9 @@ namespace Flagman.Endpoints;
 
 public static class RecipeItemEndpoints
 {
-    public static IEndpointRouteBuilder MapRecipeItemEndpoints(this IEndpointRouteBuilder endpoints)
+    public static RouteGroupBuilder MapRecipeItemEndpoints(this RouteGroupBuilder api)
     {
-        var recipeItems = endpoints.MapGroup("/api/recipe-items");
+        var recipeItems = api.MapGroup("/recipe-items").WithTags("Recipe Items");
 
         recipeItems.MapGet("/", async (
             IRecipeItemService service,
@@ -59,7 +59,7 @@ public static class RecipeItemEndpoints
                 : Results.NotFound(new { error = result.Error });
         });
 
-        var dishes = endpoints.MapGroup("/api/dishes");
+        var dishes = api.MapGroup("/dishes").WithTags("Dishes");
 
         dishes.MapGet("/{dishId:guid}/recipe-items", async (
             Guid dishId,
@@ -89,7 +89,7 @@ public static class RecipeItemEndpoints
                     : Results.BadRequest(new { error = result.Error });
         });
 
-        return endpoints;
+        return api;
     }
 
     internal static object ToResponse(RecipeItem item) => new
