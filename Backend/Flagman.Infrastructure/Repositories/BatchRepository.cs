@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Flagman.Infrastructure.Repositories;
 
-internal sealed class BatchRepository(AppDbContext db) : IBatchRepository
+public sealed class BatchRepository(AppDbContext db) : IBatchRepository
 {
     public async Task<IReadOnlyList<Batch>> GetInStockAsync(Guid? productId, CancellationToken cancellationToken)
     {
@@ -25,4 +25,26 @@ internal sealed class BatchRepository(AppDbContext db) : IBatchRepository
             .ThenBy(b => b.ReceivedAt)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<List<Batch>> GetAllAsync(CancellationToken cancellationToken) =>
+             await db.Batches.AsNoTracking()
+            .Include(b => b.Product)
+            .Include(b => b.Supply)
+            .OrderBy(b => b.ExpiresAt)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<Batch>> GetInStockForUpdateAsync(
+        IReadOnlyCollection<Guid> productIds,
+        CancellationToken cancellationToken = default)
+    {
+        return await db.Batches
+            .Include(b => b.Product)
+            .Include(b => b.Supply)
+            .Where(b => productIds.Contains(b.ProductId))
+            .Where(b => b.RemainingQuantity != Quantity.Zero)
+            .OrderBy(b => b.ExpiresAt)
+            .ThenBy(b => b.ReceivedAt)
+            .ToListAsync(cancellationToken);
+    }
+
 }

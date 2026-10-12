@@ -29,6 +29,8 @@ public sealed class Batch : Entity
     }
 
 
+    
+
     public Guid SupplyId { get; private set; }
     public Supply Supply { get; private set; }
 
@@ -46,4 +48,15 @@ public sealed class Batch : Entity
     public bool IsExpired(DateTimeOffset now) => ExpiresAt <= now;
 
     public TimeSpan TimeLeft(DateTimeOffset now) => ExpiresAt - now;
+
+    public void Consume(Quantity quantity)
+    {
+        if (quantity.IsZero)
+            throw new ArgumentOutOfRangeException(nameof(quantity), "Количество списания должно быть больше нуля.");
+
+        if (quantity.Value > RemainingQuantity.Value)
+            throw new InvalidOperationException("Недостаточно продукта в партии.");
+
+        RemainingQuantity = Quantity.From(RemainingQuantity.Value - quantity.Value);
+    }
 }

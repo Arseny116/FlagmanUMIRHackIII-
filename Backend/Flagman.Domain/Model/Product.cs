@@ -30,6 +30,6 @@ public sealed class Product : Entity
 
     public string Name { get; private set; }
 
-    /// <summary>Единица измерения (кг, л, шт...).</summary>
+    
     public string Unit { get; private set; }
 }

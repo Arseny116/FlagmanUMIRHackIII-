@@ -12,6 +12,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Flagman.Domain\Flagman.Domain.csproj" />
+    <PackageReference Include="CSharpFunctionalExtensions" Version="3.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Flagman.Domain\Flagman.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Exceptions\" />
   </ItemGroup>
 
 </Project>
