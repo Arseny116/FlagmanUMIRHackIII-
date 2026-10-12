@@ -65,22 +65,26 @@ export function getStopList() {
 }
 
 export function getHotOffers() {
-  return DISHES.map((dish) => {
-    let score = 0;
-    const reasons = [];
-    for (const need of dish.composition) {
-      const soonest = getBatches(need.productId).sort((a, b) => a.hoursLeft - b.hoursLeft)[0];
-      if (soonest && soonest.hoursLeft < 48) {
-        score += ((48 - soonest.hoursLeft) / 48) * need.quantity;
-        reasons.push(
-          `${soonest.productName}: ${soonest.quantity} ${soonest.unit}, истекает через ${soonest.hoursLeft} ч`
-        );
+  const stopIds = new Set(getStopList().map((d) => d.id));
+
+  return DISHES
+    .filter((dish) => !stopIds.has(dish.id)) 
+    .map((dish) => {
+      let score = 0;
+      const reasons = [];
+      for (const need of dish.composition) {
+        const soonest = getBatches(need.productId).sort((a, b) => a.hoursLeft - b.hoursLeft)[0];
+        if (soonest && soonest.hoursLeft < 48) {
+          score += ((48 - soonest.hoursLeft) / 48) * need.quantity;
+          reasons.push(
+            `${soonest.productName}: ${soonest.quantity} ${soonest.unit}, истекает через ${soonest.hoursLeft} ч`
+          );
+        }
       }
-    }
-    return { id: dish.id, name: dish.name, price: dish.price, score, reasons };
-  })
-  .filter((d) => d.score > 0)
-  .sort((a, b) => b.score - a.score);
+      return { id: dish.id, name: dish.name, price: dish.price, score, reasons };
+    })
+    .filter((d) => d.score > 0)
+    .sort((a, b) => b.score - a.score);
 }
 
 export function getOrders() { return store.orders; }
