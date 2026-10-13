@@ -2,9 +2,9 @@ import {
   Box, Heading, Text, VStack, HStack, Button, Input, Select,
   NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper,
   NumberDecrementStepper, IconButton, Table, Thead, Tbody, Tr, Th, Td,
-  Divider, useToast, Skeleton, FormControl, FormErrorMessage, Spinner,
+  Divider, useToast, Skeleton, FormControl, FormErrorMessage, Spinner, 
 } from '@chakra-ui/react';
-import { AddIcon, DeleteIcon } from '@chakra-ui/icons';
+import {  AddIcon, DeleteIcon, RepeatIcon  } from '@chakra-ui/icons';
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
@@ -12,6 +12,9 @@ import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
 
 const emptyRow = () => ({ productId: '', quantity: 1, shelfLifeHours: 24 });
+
+const generateSupplyNumber = () =>
+  `SUP-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(Math.random() * 9000 + 1000)}`;
 
 function Row({ row, index, onChange, onRemove, canRemove, touched, products }) {
   const errors = {
@@ -104,7 +107,7 @@ function Row({ row, index, onChange, onRemove, canRemove, touched, products }) {
 
 function SupplyForm({ onCreated }) {
   const toast = useToast();
-  const [number, setNumber] = useState('');
+  const [number, setNumber] = useState(generateSupplyNumber());
   const [rows, setRows] = useState([emptyRow()]);
   const [touched, setTouched] = useState(false);
 
@@ -135,7 +138,7 @@ function SupplyForm({ onCreated }) {
         duration: 3000,
       });
       setRows([emptyRow()]);
-      setNumber('');
+       setNumber(generateSupplyNumber());
       setTouched(false);
       onCreated?.();
     },
@@ -183,18 +186,28 @@ function SupplyForm({ onCreated }) {
           </Text>
         </HStack>
 
-        <FormControl maxW="260px">
-          <Input
-            placeholder="Номер (напр. SUP-005)"
-            value={number}
-            onChange={(e) => setNumber(e.target.value)}
-            bg="appBg"
-            borderColor="appBorder"
-            color="appText"
-            _hover={{ borderColor: 'appAccent' }}
-            _focus={{ borderColor: 'appAccent', boxShadow: 'none' }}
-          />
-        </FormControl>
+        <HStack>
+  <Input
+    placeholder="Номер"
+    value={number}
+    onChange={(e) => setNumber(e.target.value)}
+    bg="appBg"
+    borderColor="appBorder"
+    color="appText"
+    flex={1}
+    _hover={{ borderColor: 'appAccent' }}
+    _focus={{ borderColor: 'appAccent', boxShadow: 'none' }}
+  />
+  <IconButton
+    aria-label="Сгенерировать номер"
+    icon={<RepeatIcon />}
+    variant="outline"
+    borderColor="appBorder"
+    color="appMuted"
+    _hover={{ color: 'appAccent', borderColor: 'appAccent' }}
+    onClick={() => setNumber(generateSupplyNumber())}
+  />
+</HStack>
 
         <Divider borderColor="appBorder" my={2} />
 
