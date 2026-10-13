@@ -8,16 +8,21 @@ import { useCart } from '../context/useCart';
 import { api } from '../api/client';
 
 function OrderRejectionBody({ missing }) {
+  if (!Array.isArray(missing) || missing.length === 0) {
+    return <Text fontSize="sm">Не хватает ингредиентов</Text>;
+  }
   return (
     <VStack align="stretch" spacing={2} mt={1}>
       {missing.map((m, i) => (
         <HStack key={i} align="flex-start" spacing={2}>
           <Box as="span" color="red.500" fontWeight="bold" lineHeight="1.2">•</Box>
           <Box>
-            <Text fontSize="sm" fontWeight="600" color="gray.800">{m.productName}</Text>
+            <Text fontSize="sm" fontWeight="600" color="gray.800">
+              {m.productName ?? m.productId ?? 'Ингредиент'}
+            </Text>
             <HStack spacing={3} fontSize="xs" color="gray.600">
-              <Text>нужно: <b>{m.need} {m.unit}</b></Text>
-              <Text>есть: <b>{m.have} {m.unit}</b></Text>
+              <Text>нужно: <b>{m.need ?? m.quantity ?? '?'} {m.unit ?? ''}</b></Text>
+              <Text>есть: <b>{m.have ?? 0} {m.unit ?? ''}</b></Text>
             </HStack>
           </Box>
         </HStack>

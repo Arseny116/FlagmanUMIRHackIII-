@@ -11,6 +11,7 @@ import { api } from '../api/client';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
 import { useSearchParams } from 'react-router-dom';
+import { useColorModeValue } from '@chakra-ui/react';
 
 const emptyRow = () => ({ productId: '', quantity: 1, shelfLifeHours: 24 });
 
@@ -18,7 +19,8 @@ const generateSupplyNumber = () =>
   `SUP-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(Math.random() * 9000 + 1000)}`;
 
 function Row({ row, index, onChange, onRemove, canRemove, touched, products }) {
-  
+  const optionBg = useColorModeValue('#ffffff', '#1a1a1a');
+  const optionColor = useColorModeValue('#1a1a1a', '#e4e4e7');
   const errors = {
     productId: touched && !row.productId ? 'Выберите продукт' : '',
     quantity: touched && (!row.quantity || row.quantity <= 0) ? 'Должно быть > 0' : '',
@@ -39,9 +41,13 @@ function Row({ row, index, onChange, onRemove, canRemove, touched, products }) {
           _focus={{ borderColor: 'appAccent', boxShadow: 'none' }}
         >
           {products.map((p) => (
-            <option key={p.id} value={p.id} style={{ background: '#1a1a1a' }}>
+            <option
+              key={p.id}
+              value={p.id}
+              style={{ background: optionBg, color: optionColor }}
+              >
               {p.name} ({p.unit})
-            </option>
+              </option>
           ))}
         </Select>
         {errors.productId && <FormErrorMessage fontSize="xs">{errors.productId}</FormErrorMessage>}
