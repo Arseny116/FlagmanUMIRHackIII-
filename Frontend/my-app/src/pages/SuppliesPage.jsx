@@ -2,7 +2,7 @@ import {
   Box, Heading, Text, VStack, HStack, Button, Input, Select,
   NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper,
   NumberDecrementStepper, IconButton, Table, Thead, Tbody, Tr, Th, Td,
-  Divider, useToast, Skeleton, FormControl, FormErrorMessage, Spinner, 
+  Divider, useToast, Skeleton, FormControl, FormErrorMessage, Spinner, useBreakpointValue,
 } from '@chakra-ui/react';
 import {  AddIcon, DeleteIcon, RepeatIcon  } from '@chakra-ui/icons';
 import { useState, useMemo } from 'react';
@@ -271,11 +271,72 @@ function SupplyForm({ onCreated }) {
 }
 
 function SupplyHistory() {
+  const isMobile = useBreakpointValue({ base: true, md: false });
+
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['supplies'],
+    queryFn: api.getSupplies,
+  });
+
+  if (isLoading) {
+    return (
+      <VStack align="stretch" spacing={2}>
+        <Skeleton height="40px" borderRadius="md" />
+        <Skeleton height="40px" borderRadius="md" />
+        <Skeleton height="40px" borderRadius="md" />
+      </VStack>
+    );
+  }
+  if (error) return <ErrorState message={error.message} onRetry={refetch} />;
+  if (!data?.length) {
+    return <EmptyState title="Поставок пока нет" subtitle="Создайте первую через форму выше" />;
+  }
+
+  if (isMobile) {
+    return (
+      <VStack align="stretch" spacing={2}>
+        {data.map((s) => (
+          <Box key={s.id} p={3} bg="appBg" border="1px solid" borderColor="appBorder" borderRadius="md">
+            <HStack justify="space-between" mb={1}>
+              <Text color="appText" fontWeight="600">{s.number}</Text>
+              <Text color="appMuted" fontSize="xs">{s.batchesCount} партий</Text>
+            </HStack>
+            <Text color="appMuted" fontSize="sm">
+              {new Date(s.createdAt).toLocaleString('ru-RU')}
+            </Text>
+          </Box>
+        ))}
+      </VStack>
+    );
+  }
+
   return (
-    <EmptyState
-      title="История недоступна"
-      subtitle="Бэк пока не отдаёт список поставок. Создавайте поставки через форму выше."
-    />
+    <Table variant="simple" size="sm">
+      <Thead>
+        <Tr>
+          <Th borderColor="appBorder" color="appMuted">Номер</Th>
+          <Th borderColor="appBorder" color="appMuted">Дата</Th>
+          <Th isNumeric borderColor="appBorder" color="appMuted">Партий</Th>
+          <Th isNumeric borderColor="appBorder" color="appMuted">Всего</Th>
+        </Tr>
+      </Thead>
+      <Tbody>
+        {data.map((s) => (
+          <Tr key={s.id} borderColor="appBorder">
+            <Td borderColor="appBorder" color="appText" fontWeight="500">{s.number}</Td>
+            <Td borderColor="appBorder" color="appMuted" fontSize="sm">
+              {new Date(s.createdAt).toLocaleString('ru-RU', {
+                day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+              })}
+            </Td>
+            <Td isNumeric borderColor="appBorder" color="appMuted">{s.batchesCount}</Td>
+            <Td isNumeric borderColor="appBorder" color="appText">
+              {s.totalQuantity?.toFixed(2) ?? '—'}
+            </Td>
+          </Tr>
+        ))}
+      </Tbody>
+    </Table>
   );
 }
 

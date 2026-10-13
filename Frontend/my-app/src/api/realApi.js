@@ -154,7 +154,9 @@ export async function getSupplies() {
     supply.totalQuantity += b.quantity;
   }
 
-  return [...map.values()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  return [...map.values()]
+    .filter((s) => s.number && s.number !== 'string')
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
 
 export async function getOrders() {
