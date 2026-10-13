@@ -6,13 +6,13 @@ async function request(path, options = {}) {
 
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    let message = `HTTP ${res.status}`;
-    try {
-      const json = JSON.parse(text);
-      message = json.error || json.title || message;
-      if (json.details) message += `: ${JSON.stringify(json.details)}`;
-    } catch {}
-    throw new Error(message);
+    let body = null;
+    try { body = JSON.parse(text); } catch {}
+
+    const error = new Error(body?.error || body?.title || `HTTP ${res.status}`);
+    error.status = res.status;
+    error.body = body;
+    throw error;
   }
 
   return res.status === 204 ? null : res.json();
@@ -134,10 +134,6 @@ export async function createOrder(body) {
   return request('/api/orders', { method: 'POST', body: JSON.stringify(body) });
 }
 
-export async function createOrderBatch(items) {
-  return request('/api/orders', { method: 'POST', body: JSON.stringify({ items }) });
-}
-
 export async function getSupplies() {
   const batches = await getBatches();
   const map = new Map();
@@ -163,4 +159,23 @@ export async function getSupplies() {
 
 export async function getOrders() {
   return [];
+}
+
+export async function createOrderBatch(items) {
+  try {
+    const order = await request('/api/orders', {
+      method: 'POST',
+      body: JSON.stringify({ items }),
+    });
+    return { ok: true, orders: [order] };
+  } catch (err) {
+    if (err.status === 409 && err.body) {
+      return {
+        ok: false,
+        error: err.body.error ?? 'Не хватает ингредиентов',
+        missing: err.body.shortages ?? err.body.missing ?? [],
+      };
+    }
+    throw err;
+  }
 }
