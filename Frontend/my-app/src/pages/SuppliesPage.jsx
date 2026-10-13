@@ -10,6 +10,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
+import { useSearchParams } from 'react-router-dom';
 
 const emptyRow = () => ({ productId: '', quantity: 1, shelfLifeHours: 24 });
 
@@ -17,6 +18,7 @@ const generateSupplyNumber = () =>
   `SUP-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(Math.random() * 9000 + 1000)}`;
 
 function Row({ row, index, onChange, onRemove, canRemove, touched, products }) {
+  
   const errors = {
     productId: touched && !row.productId ? 'Выберите продукт' : '',
     quantity: touched && (!row.quantity || row.quantity <= 0) ? 'Должно быть > 0' : '',
@@ -107,10 +109,15 @@ function Row({ row, index, onChange, onRemove, canRemove, touched, products }) {
 
 function SupplyForm({ onCreated }) {
   const toast = useToast();
-  const [number, setNumber] = useState(generateSupplyNumber());
-  const [rows, setRows] = useState([emptyRow()]);
-  const [touched, setTouched] = useState(false);
+  const [searchParams] = useSearchParams();
+  const preselectedProductId = searchParams.get('productId') ?? '';
 
+  const [number, setNumber] = useState(generateSupplyNumber());
+  const [rows, setRows] = useState([
+    { productId: preselectedProductId, quantity: 1, shelfLifeHours: 24 },
+  ]);
+  const [touched, setTouched] = useState(false);
+  
   const stockQuery = useQuery({
     queryKey: ['stock'],
     queryFn: api.getStock,
@@ -137,8 +144,8 @@ function SupplyForm({ onCreated }) {
         status: 'success',
         duration: 3000,
       });
-      setRows([emptyRow()]);
-       setNumber(generateSupplyNumber());
+      setRows([{ productId: preselectedProductId, quantity: 1, shelfLifeHours: 24 }]);
+      setNumber(generateSupplyNumber());
       setTouched(false);
       onCreated?.();
     },

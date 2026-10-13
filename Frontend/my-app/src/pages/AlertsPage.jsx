@@ -90,13 +90,13 @@ export default function AlertsPage() {
               <HStack spacing={3}>
                 <ExpiryBadge hours={b.hoursLeft} />
                 <Button
-                  as={RouterLink}
-                  to="/supplies"
-                  size="sm"
-                  variant="outline"
-                  borderColor="appBorder"
-                  color="appMuted"
-                  _hover={{ color: 'appAccent', borderColor: 'appAccent' }}
+                    as={RouterLink}
+                    to={`/supplies?productId=${b.productId}`}
+                    size="sm"
+                    variant="outline"
+                    borderColor="appBorder"
+                    color="appMuted"
+                    _hover={{ color: 'appAccent', borderColor: 'appAccent' }}
                 >
                   Заказать поставку
                 </Button>

@@ -11,7 +11,7 @@ async function request(path, options = {}) {
       const json = JSON.parse(text);
       message = json.error || json.title || message;
       if (json.details) message += `: ${JSON.stringify(json.details)}`;
-    } catch { /* not json */ }
+    } catch {}
     throw new Error(message);
   }
 
@@ -101,11 +101,7 @@ export async function getStopList() {
 }
 
 export async function getHotOffers() {
-  const [dishes, batches, stoplist] = await Promise.all([
-    getDishes(),
-    getBatches(),
-    getStopList(),
-  ]);
+  const [dishes, batches, stoplist] = await Promise.all([getDishes(), getBatches(), getStopList()]);
   const stopIds = new Set(stoplist.map((d) => d.id));
 
   return dishes
@@ -131,25 +127,40 @@ export async function getHotOffers() {
 }
 
 export async function createSupply(body) {
-  return request('/api/supplies', {
-    method: 'POST',
-    body: JSON.stringify(body),
-  });
+  return request('/api/supplies', { method: 'POST', body: JSON.stringify(body) });
 }
 
 export async function createOrder(body) {
-  return request('/api/orders', {
-    method: 'POST',
-    body: JSON.stringify(body),
-  });
+  return request('/api/orders', { method: 'POST', body: JSON.stringify(body) });
 }
 
 export async function createOrderBatch(items) {
-  return request('/api/orders', {
-    method: 'POST',
-    body: JSON.stringify({ items }),
-  });
+  return request('/api/orders', { method: 'POST', body: JSON.stringify({ items }) });
 }
 
-export async function getSupplies() { return []; }
-export async function getOrders() { return []; }
+export async function getSupplies() {
+  const batches = await getBatches();
+  const map = new Map();
+
+  for (const b of batches) {
+    if (!b.supplyId) continue;
+    if (!map.has(b.supplyId)) {
+      map.set(b.supplyId, {
+        id: b.supplyId,
+        number: b.supplyNumber ?? '—',
+        createdAt: b.suppliedAt,
+        batchesCount: 0,
+        totalQuantity: 0,
+      });
+    }
+    const supply = map.get(b.supplyId);
+    supply.batchesCount += 1;
+    supply.totalQuantity += b.quantity;
+  }
+
+  return [...map.values()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+}
+
+export async function getOrders() {
+  return [];
+}

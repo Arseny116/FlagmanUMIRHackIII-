@@ -1,6 +1,6 @@
 import {
   Box, Heading, Text, SimpleGrid, Badge, HStack, VStack,
-  Divider, Button, Skeleton, Tooltip,
+  Divider, Button, Skeleton, Tooltip, useToast 
 } from '@chakra-ui/react';
 import { AddIcon } from '@chakra-ui/icons';
 import { useQuery } from '@tanstack/react-query';
@@ -9,7 +9,11 @@ import { useCart } from '../context/useCart';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
 
+
+
+
 export default function MenuPage() {
+  const toast = useToast();
   const { add } = useCart();
 
   const dishesQuery = useQuery({
@@ -133,7 +137,17 @@ export default function MenuPage() {
                     color="white"
                     _hover={{ opacity: isStopped ? 1 : 0.9 }}
                     isDisabled={isStopped}
-                    onClick={() => add(dish)}
+                    onClick={() => {
+                      add(dish);
+                      toast({
+                        title: 'Добавлено в заказ',
+                        description: dish.name,
+                        status: 'success',
+                        duration: 1500,
+                        isClosable: true,
+                        position: 'bottom-right',
+                        });
+                      }}
                   >
                     {isStopped ? 'Недоступно' : 'В заказ'}
                   </Button>
