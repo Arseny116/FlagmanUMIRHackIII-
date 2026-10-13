@@ -118,11 +118,8 @@ function SupplyForm({ onCreated }) {
   ]);
   const [touched, setTouched] = useState(false);
   
-  const stockQuery = useQuery({
-    queryKey: ['stock'],
-    queryFn: api.getStock,
-  });
-  const products = stockQuery.data ?? [];
+  const productsQuery = useQuery({ queryKey: ['products'], queryFn: api.getProducts });
+  const products = productsQuery.data ?? [];
 
   const updateRow = (i, patch) =>
     setRows((r) => r.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
@@ -164,15 +161,15 @@ function SupplyForm({ onCreated }) {
     if (!isValid) return;
 
     const items = rows.map((r) => {
-      const product = products.find((p) => p.id === r.productId);
-      return {
-        productId: r.productId,                          
-        name: product?.name ?? 'Неизвестно',
-        unit: product?.unit ?? 'шт',
-        quantity: Number(r.quantity),
-        shelfLifeHours: Number(r.shelfLifeHours),
-      };
-    });
+            const product = products.find((p) => p.id === r.productId);
+            return {
+                productId: r.productId,
+                name: product?.name ?? 'Неизвестно',
+                unit: product?.unit ?? 'шт',
+                quantity: Number(r.quantity),
+                shelfLifeHours: Number(r.shelfLifeHours),
+                };
+          });
 
     createMutation.mutate({
       id: crypto.randomUUID(),                            
@@ -218,26 +215,21 @@ function SupplyForm({ onCreated }) {
 
         <Divider borderColor="appBorder" my={2} />
 
-        {stockQuery.isLoading ? (
+        {productsQuery.isLoading ? (
           <HStack><Spinner size="sm" /><Text color="appMuted" fontSize="sm">Загрузка продуктов...</Text></HStack>
-        ) : stockQuery.error ? (
-          <ErrorState message={stockQuery.error.message} onRetry={() => stockQuery.refetch()} />
-        ) : (
-          <VStack align="stretch" spacing={3}>
+            ) : productsQuery.error ? (
+            <ErrorState message={productsQuery.error.message} onRetry={() => productsQuery.refetch()} />
+            ) : (
+            <VStack align="stretch" spacing={3}>
             {rows.map((row, i) => (
-              <Row
-                key={i}
-                row={row}
-                index={i}
-                onChange={updateRow}
-                onRemove={removeRow}
-                canRemove={rows.length > 1}
-                touched={touched}
-                products={products}
-              />
-            ))}
+            <Row
+                key={i} row={row} index={i}
+                onChange={updateRow} onRemove={removeRow}
+                canRemove={rows.length > 1} touched={touched} products={products}
+          />
+          ))}
           </VStack>
-        )}
+          )}
 
         <Button
           leftIcon={<AddIcon />}
@@ -248,7 +240,7 @@ function SupplyForm({ onCreated }) {
           onClick={addRow}
           size="sm"
           alignSelf="flex-start"
-          isDisabled={stockQuery.isLoading}
+          isDisabled={productsQuery.isLoading}
         >
           Добавить строку
         </Button>
@@ -262,7 +254,7 @@ function SupplyForm({ onCreated }) {
         isLoading={createMutation.isPending}
         loadingText="Оформляем..."
         onClick={handleSubmit}
-        isDisabled={stockQuery.isLoading}
+        isDisabled={productsQuery.isLoading}
       >
         Оформить поставку
       </Button>

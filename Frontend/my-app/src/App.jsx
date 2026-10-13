@@ -18,6 +18,8 @@ import AlertsPage from './pages/AlertsPage';
 import { useExpiryToasts } from './hooks/useExpiryToasts';
 import { useCart } from './context/useCart';
 import { api } from './api/client';
+import { seedIfEmpty } from './api/realApi';
+import { useEffect } from 'react';
 
 function ThemeToggle() {
   const { colorMode, toggleColorMode } = useColorMode();
@@ -39,6 +41,10 @@ function ThemeToggle() {
 export default function App() {
   useExpiryToasts();
   const { count } = useCart();
+  
+  useEffect(() => {
+    seedIfEmpty().catch((err) => console.warn('[SEED] Ошибка:', err));
+    }, []);
 
   const { data: alerts } = useQuery({
     queryKey: ['alerts', 24],

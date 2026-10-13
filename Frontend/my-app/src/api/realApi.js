@@ -1,3 +1,7 @@
+import { SEED_PRODUCTS, SEED_DISHES, SEED_SUPPLY } from './seed';
+
+let seedPromise = null;
+
 async function request(path, options = {}) {
   const res = await fetch(path, {
     headers: { 'Content-Type': 'application/json' },
@@ -67,8 +71,41 @@ export async function getBatches(productId) {
 }
 
 export async function getDishes() {
-  const raw = await request('/api/dishes');
-  return raw.map(adaptDish);
+  const [dishesRaw, stock] = await Promise.all([
+    request('/api/dishes'),
+    request('/api/stock').catch(() => []),
+  ]);
+
+  const stockMap = new Map(
+    (stock ?? []).map((s) => [
+      s.productId,
+      { name: s.name, unit: s.unit === 'string' ? 'шт' : s.unit },
+    ])
+  );
+
+  return dishesRaw.map((d) => ({
+    id: d.id,
+    name: d.name,
+    price: 0,
+    composition: (d.recipeItems ?? []).map((r) => {
+      const product = stockMap.get(r.productId);
+      return {
+        productId: r.productId,
+        productName: product?.name ?? 'Неизвестно',
+        quantity: r.quantity,
+        unit: product?.unit ?? 'шт',
+      };
+    }),
+  }));
+}
+
+export async function getProducts() {
+  const raw = await request('/api/stock');
+  return raw.map((s) => ({
+    id: s.productId,
+    name: s.name,
+    unit: s.unit === 'string' ? 'шт' : s.unit,
+  }));
 }
 
 export async function getExpiring(hours = 24) {
@@ -101,7 +138,9 @@ export async function getStopList() {
 }
 
 export async function getHotOffers() {
-  const [dishes, batches, stoplist] = await Promise.all([getDishes(), getBatches(), getStopList()]);
+  const [dishes, batches, stoplist] = await Promise.all([
+    getDishes(), getBatches(), getStopList(),
+  ]);
   const stopIds = new Set(stoplist.map((d) => d.id));
 
   return dishes
@@ -134,6 +173,25 @@ export async function createOrder(body) {
   return request('/api/orders', { method: 'POST', body: JSON.stringify(body) });
 }
 
+export async function createOrderBatch(items) {
+  try {
+    const order = await request('/api/orders', {
+      method: 'POST',
+      body: JSON.stringify({ items }),
+    });
+    return { ok: true, orders: [order] };
+  } catch (err) {
+    if (err.status === 409 && err.body) {
+      return {
+        ok: false,
+        error: err.body.error ?? 'Не хватает ингредиентов',
+        missing: err.body.shortages ?? err.body.missing ?? [],
+      };
+    }
+    throw err;
+  }
+}
+
 export async function getSupplies() {
   const batches = await getBatches();
   const map = new Map();
@@ -163,21 +221,67 @@ export async function getOrders() {
   return [];
 }
 
-export async function createOrderBatch(items) {
-  try {
-    const order = await request('/api/orders', {
-      method: 'POST',
-      body: JSON.stringify({ items }),
-    });
-    return { ok: true, orders: [order] };
-  } catch (err) {
-    if (err.status === 409 && err.body) {
-      return {
-        ok: false,
-        error: err.body.error ?? 'Не хватает ингредиентов',
-        missing: err.body.shortages ?? err.body.missing ?? [],
-      };
+
+export async function seedIfEmpty() {
+  if (seedPromise) return seedPromise;
+
+  seedPromise = (async () => {
+    let hasProducts = false;
+    try {
+      const stock = await request('/api/stock');
+      if (Array.isArray(stock) && stock.length > 0) {
+        hasProducts = true;
+        console.log(`[SEED] Продуктов уже: ${stock.length}`);
+      }
+    } catch (err) {
+      console.warn('[SEED] Не удалось проверить сток:', err.message);
     }
-    throw err;
-  }
+
+    if (!hasProducts) {
+      console.log('[SEED] Продуктов нет — создаю стартовую поставку');
+      try {
+        await createSupply({
+          id: crypto.randomUUID(),
+          number: `SUP-SEED-${Date.now()}`,
+          items: SEED_SUPPLY.items,
+        });
+        console.log('[SEED] Поставка создана');
+      } catch (err) {
+        console.warn('[SEED] Ошибка поставки:', err.message);
+      }
+    }
+
+    let existingDishes = [];
+    try {
+      existingDishes = await request('/api/dishes');
+    } catch (err) {
+      console.warn('[SEED] Не удалось проверить блюда:', err.message);
+    }
+
+    const existingNames = new Set((existingDishes ?? []).map((d) => d.name));
+
+    for (const dish of SEED_DISHES) {
+      if (existingNames.has(dish.name)) {
+        console.log(`[SEED] "${dish.name}" уже есть — пропускаю`);
+        continue;
+      }
+      try {
+        const res = await request('/api/dishes', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: dish.name,
+            recipeItems: dish.composition.map((c) => ({
+              productId: c.productId,
+              quantity: c.quantity,
+            })),
+          }),
+        });
+        console.log(`[SEED] Создано: ${dish.name} → ${res.id}`);
+      } catch (err) {
+        console.warn(`[SEED] Ошибка "${dish.name}":`, err.message);
+      }
+    }
+  })();
+
+  return seedPromise;
 }
