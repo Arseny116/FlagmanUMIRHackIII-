@@ -2,20 +2,18 @@ import {
   Box, Heading, Text, VStack, HStack, Button, Input, Select,
   NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper,
   NumberDecrementStepper, IconButton, Table, Thead, Tbody, Tr, Th, Td,
-  Divider, useToast, Skeleton, FormControl, FormErrorMessage,
+  Divider, useToast, Skeleton, FormControl, FormErrorMessage, Spinner,
 } from '@chakra-ui/react';
 import { AddIcon, DeleteIcon } from '@chakra-ui/icons';
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
-import { PRODUCTS } from '../api/mockData';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
 
 const emptyRow = () => ({ productId: '', quantity: 1, shelfLifeHours: 24 });
 
-function Row({ row, index, onChange, onRemove, canRemove, touched }) {
-  const product = PRODUCTS.find((p) => p.id === Number(row.productId));
+function Row({ row, index, onChange, onRemove, canRemove, touched, products }) {
   const errors = {
     productId: touched && !row.productId ? 'Выберите продукт' : '',
     quantity: touched && (!row.quantity || row.quantity <= 0) ? 'Должно быть > 0' : '',
@@ -35,7 +33,7 @@ function Row({ row, index, onChange, onRemove, canRemove, touched }) {
           _hover={{ borderColor: 'appAccent' }}
           _focus={{ borderColor: 'appAccent', boxShadow: 'none' }}
         >
-          {PRODUCTS.map((p) => (
+          {products.map((p) => (
             <option key={p.id} value={p.id} style={{ background: '#1a1a1a' }}>
               {p.name} ({p.unit})
             </option>
@@ -110,6 +108,12 @@ function SupplyForm({ onCreated }) {
   const [rows, setRows] = useState([emptyRow()]);
   const [touched, setTouched] = useState(false);
 
+  const stockQuery = useQuery({
+    queryKey: ['stock'],
+    queryFn: api.getStock,
+  });
+  const products = stockQuery.data ?? [];
+
   const updateRow = (i, patch) =>
     setRows((r) => r.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
   const addRow = () => setRows((r) => [...r, emptyRow()]);
@@ -140,7 +144,7 @@ function SupplyForm({ onCreated }) {
         title: 'Ошибка поставки',
         description: err.message,
         status: 'error',
-        duration: 4000,
+        duration: 5000,
       });
     },
   });
@@ -148,13 +152,22 @@ function SupplyForm({ onCreated }) {
   const handleSubmit = () => {
     setTouched(true);
     if (!isValid) return;
-    createMutation.mutate({
-      number: number.trim() || undefined,
-      items: rows.map((r) => ({
-        productId: Number(r.productId),
+
+    const items = rows.map((r) => {
+      const product = products.find((p) => p.id === r.productId);
+      return {
+        productId: r.productId,                          
+        name: product?.name ?? 'Неизвестно',
+        unit: product?.unit ?? 'шт',
         quantity: Number(r.quantity),
         shelfLifeHours: Number(r.shelfLifeHours),
-      })),
+      };
+    });
+
+    createMutation.mutate({
+      id: crypto.randomUUID(),                            
+      number: number.trim() || undefined,                 
+      items,
     });
   };
 
@@ -185,19 +198,26 @@ function SupplyForm({ onCreated }) {
 
         <Divider borderColor="appBorder" my={2} />
 
-        <VStack align="stretch" spacing={3}>
-          {rows.map((row, i) => (
-            <Row
-              key={i}
-              row={row}
-              index={i}
-              onChange={updateRow}
-              onRemove={removeRow}
-              canRemove={rows.length > 1}
-              touched={touched}
-            />
-          ))}
-        </VStack>
+        {stockQuery.isLoading ? (
+          <HStack><Spinner size="sm" /><Text color="appMuted" fontSize="sm">Загрузка продуктов...</Text></HStack>
+        ) : stockQuery.error ? (
+          <ErrorState message={stockQuery.error.message} onRetry={() => stockQuery.refetch()} />
+        ) : (
+          <VStack align="stretch" spacing={3}>
+            {rows.map((row, i) => (
+              <Row
+                key={i}
+                row={row}
+                index={i}
+                onChange={updateRow}
+                onRemove={removeRow}
+                canRemove={rows.length > 1}
+                touched={touched}
+                products={products}
+              />
+            ))}
+          </VStack>
+        )}
 
         <Button
           leftIcon={<AddIcon />}
@@ -208,6 +228,7 @@ function SupplyForm({ onCreated }) {
           onClick={addRow}
           size="sm"
           alignSelf="flex-start"
+          isDisabled={stockQuery.isLoading}
         >
           Добавить строку
         </Button>
@@ -221,6 +242,7 @@ function SupplyForm({ onCreated }) {
         isLoading={createMutation.isPending}
         loadingText="Оформляем..."
         onClick={handleSubmit}
+        isDisabled={stockQuery.isLoading}
       >
         Оформить поставку
       </Button>
@@ -229,46 +251,11 @@ function SupplyForm({ onCreated }) {
 }
 
 function SupplyHistory() {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['supplies'],
-    queryFn: api.getSupplies,
-  });
-
-  if (isLoading) {
-    return (
-      <VStack align="stretch" spacing={2}>
-        <Skeleton height="40px" borderRadius="md" />
-        <Skeleton height="40px" borderRadius="md" />
-        <Skeleton height="40px" borderRadius="md" />
-      </VStack>
-    );
-  }
-  if (error) return <ErrorState message={error.message} onRetry={refetch} />;
-  if (!data?.length) {
-    return <EmptyState title="Поставок пока нет" subtitle="Оформите первую поставку слева" />;
-  }
-
   return (
-    <Table variant="simple" size="sm">
-      <Thead>
-        <Tr>
-          <Th borderColor="appBorder" color="appMuted">Номер</Th>
-          <Th borderColor="appBorder" color="appMuted">Дата</Th>
-        </Tr>
-      </Thead>
-      <Tbody>
-        {[...data].reverse().map((s) => (
-          <Tr key={s.id} borderColor="appBorder">
-            <Td borderColor="appBorder" color="appText" fontWeight="500">
-              {s.number}
-            </Td>
-            <Td borderColor="appBorder" color="appMuted" fontSize="sm">
-              {new Date(s.createdAt).toLocaleString('ru-RU')}
-            </Td>
-          </Tr>
-        ))}
-      </Tbody>
-    </Table>
+    <EmptyState
+      title="История недоступна"
+      subtitle="Бэк пока не отдаёт список поставок. Создавайте поставки через форму выше."
+    />
   );
 }
 
