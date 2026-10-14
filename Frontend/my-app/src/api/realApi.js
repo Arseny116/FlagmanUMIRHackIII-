@@ -285,3 +285,10 @@ export async function seedIfEmpty() {
 
   return seedPromise;
 }
+
+export async function createDish(body) {
+  return request('/api/dishes', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
