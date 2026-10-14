@@ -18,7 +18,6 @@ function AddDishModal({ isOpen, onClose }) {
   const toast = useToast();
   const queryClient = useQueryClient();
   const [name, setName] = useState('');
-  const [price, setPrice] = useState(0);
   const [items, setItems] = useState([{ productId: '', quantity: 0.1 }]);
   const [touched, setTouched] = useState(false);
 
@@ -58,7 +57,6 @@ function AddDishModal({ isOpen, onClose }) {
       queryClient.invalidateQueries({ queryKey: ['stoplist'] });
       queryClient.invalidateQueries({ queryKey: ['hotOffers'] });
       setName('');
-      setPrice(0);
       setItems([{ productId: '', quantity: 0.1 }]);
       setTouched(false);
       onClose();
@@ -112,17 +110,6 @@ function AddDishModal({ isOpen, onClose }) {
                 _focus={{ borderColor: 'appAccent', boxShadow: 'none' }}
               />
               {errors.name && <FormErrorMessage fontSize="xs">{errors.name}</FormErrorMessage>}
-            </FormControl>
-
-            <FormControl>
-              <FormLabel fontSize="sm" color="appMuted">Цена (₽) — опционально</FormLabel>
-              <NumberInput value={price} min={0} onChange={(v) => setPrice(Number(v))}>
-                <NumberInputField
-                  bg="appBg" borderColor="appBorder" color="appText"
-                  _hover={{ borderColor: 'appAccent' }}
-                  _focus={{ borderColor: 'appAccent', boxShadow: 'none' }}
-                />
-              </NumberInput>
             </FormControl>
 
             <Divider borderColor="appBorder" />
@@ -309,18 +296,6 @@ export default function MenuPage() {
                   <Heading size="sm" color="appText" fontWeight="600">
                     {dish.name}
                   </Heading>
-                  <HStack spacing={2}>
-                    {dish.price > 0 && (
-                      <Badge
-                        bg="transparent" color="appAccent"
-                        border="1px solid" borderColor="appAccent"
-                        px={2} py={0.5} borderRadius="md" fontSize="xs"
-                      >
-                        {dish.price} ₽
-                      </Badge>
-                    )}
-                    {isStopped && <Badge colorScheme="red" fontSize="xs">СТОП</Badge>}
-                  </HStack>
                 </HStack>
 
                 <Divider my={3} borderColor="appBorder" />

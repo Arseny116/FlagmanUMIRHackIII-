@@ -13,7 +13,7 @@ export function CartProvider({ children }) {
           i.dishId === dish.id ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
-      return [...prev, { dishId: dish.id, name: dish.name, price: dish.price, quantity: 1 }];
+      return [...prev, { dishId: dish.id, name: dish.name, quantity: 1 }];
     });
   };
 
@@ -29,11 +29,10 @@ export function CartProvider({ children }) {
 
   const clear = () => setItems([]);
 
-  const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
   const count = items.reduce((s, i) => s + i.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, add, remove, setQuantity, clear, total, count }}>
+    <CartContext.Provider value={{ items, add, remove, setQuantity, clear, count }}>
       {children}
     </CartContext.Provider>
   );
