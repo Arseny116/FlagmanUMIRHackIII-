@@ -1,4 +1,5 @@
 ﻿using Flagman.Domain.Abstractions;
+using Flagman.Application.Abstractions;
 using Flagman.Application.Abstractions.Services;
 using Flagman.Application.Services;
 using Flagman.Infrastructure.Persistence;
@@ -35,6 +36,8 @@ public static class DependencyInjection
         services.AddScoped<IDishService, DishService>();
         services.AddScoped<IRecipeItemService, RecipeItemService>();
         services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IExpiringService, ExpiringService>();
 
         return services;
     }

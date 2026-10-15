@@ -21,9 +21,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public async Task<IUnitOfWorkTransaction> BeginTransactionAsync(
         CancellationToken cancellationToken = default)
     {
-        if (Database.IsInMemory())
-            return new NoOpUnitOfWorkTransaction();
-
         var transaction = await Database.BeginTransactionAsync(cancellationToken);
         return new EfUnitOfWorkTransaction(transaction);
     }

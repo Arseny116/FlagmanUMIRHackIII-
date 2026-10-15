@@ -162,9 +162,14 @@ public sealed class OrderService(
         return Result.Success<Order, Error>(order);
     }
 
+ 
+
     private static Error ValidationError(string message) =>
         Error.Validation(new Dictionary<string, string[]>
         {
             ["Order"] = new[] { message }
         });
+
+    public Task<List<Order>> GetAllAsync(CancellationToken cancellationToken = default) =>
+        orderRepository.GetAllAsync(cancellationToken);
 }

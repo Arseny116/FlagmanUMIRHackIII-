@@ -9,6 +9,7 @@ public static class EndpointExtensions
         api.MapDishEndpoints();
         api.MapRecipeItemEndpoints();
         api.MapOrderEndpoints();
+        api.MapProductEndpoints();
         api.MapSupplyEndpoints();
         api.MapStockEndpoints();
 
