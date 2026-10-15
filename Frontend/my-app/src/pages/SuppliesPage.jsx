@@ -82,12 +82,12 @@ function Row({ row, index, onChange, onRemove, canRemove, touched, products }) {
       <FormControl isInvalid={!!errors.shelfLifeHours} flex={1}>
         <FormLabel fontSize="xs" color="appMuted" mb={1}>Срок, ч</FormLabel>
         <NumberInput
-          value={row.shelfLifeHours}
-          min={1}
-          step={1}
-          precision={0}
-          onChange={(v) => onChange(index, { shelfLifeHours: Number(v) || 1 })}
-        >
+            value={row.quantity}
+            min={0.01}
+            step={0.1}
+            precision={2}
+            onChange={(v) => onChange(index, { quantity: Number(v) || 0.1 })}
+          >
           <NumberInputField
             bg="appBg"
             borderColor="appBorder"

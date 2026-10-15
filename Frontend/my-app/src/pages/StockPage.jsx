@@ -1,8 +1,8 @@
 import {
   Box, Heading, Text, Spinner, Table, Thead, Tbody, Tr, Th, Td,
   Collapse, Icon, Input, InputGroup, InputLeftElement,
-  Select, Checkbox, HStack, VStack, Button, IconButton,
-  useBreakpointValue,
+  Select, Checkbox, HStack, VStack, Button,
+  useBreakpointValue, useColorModeValue,
 } from '@chakra-ui/react';
 import {
   ChevronDownIcon, ChevronRightIcon, SearchIcon, CloseIcon,
@@ -23,6 +23,8 @@ export default function StockPage() {
   const [onlyExpiring, setOnlyExpiring] = useState(false);
 
   const isMobile = useBreakpointValue({ base: true, md: false });
+  const optionBg = useColorModeValue('#ffffff', '#1a1a1a');
+  const optionColor = useColorModeValue('#1a1a1a', '#e4e4e7');
 
   const stockQuery = useQuery({ queryKey: ['stock'], queryFn: api.getStock });
   const allBatchesQuery = useQuery({ queryKey: ['batches', 'all'], queryFn: () => api.getBatches() });
@@ -97,9 +99,9 @@ export default function StockPage() {
             _hover={{ borderColor: 'appAccent' }}
             _focus={{ borderColor: 'appAccent', boxShadow: 'none' }}
           >
-            <option value="name" style={{ background: '#1a1a1a' }}>По названию (А-Я)</option>
-            <option value="qty" style={{ background: '#1a1a1a' }}>По количеству (убыв.)</option>
-            <option value="expiry" style={{ background: '#1a1a1a' }}>По сроку (сначала истекающие)</option>
+            <option value="name" style={{ background: optionBg, color: optionColor }}>По названию (А-Я)</option>
+            <option value="qty" style={{ background: optionBg, color: optionColor }}>По количеству (убыв.)</option>
+            <option value="expiry" style={{ background: optionBg, color: optionColor }}>По сроку (сначала истекающие)</option>
           </Select>
 
           <Checkbox
@@ -156,12 +158,12 @@ export default function StockPage() {
                       <VStack align="stretch" spacing={2}>
                         {batchesQuery.data?.map((b) => (
                           <HStack key={b.id} justify="space-between" fontSize="xs">
-                              <Text color="appText">{b.quantity.toFixed(2)} {b.unit}</Text>
-                              <Text color="appMuted" fontSize="xs">
-                                    до {new Date(b.expiresAt).toLocaleDateString('ru-RU')}
-                              </Text>
-                              <ExpiryBadge hours={b.hoursLeft} />
-                            </HStack>
+                            <Text color="appText">{b.quantity.toFixed(2)} {b.unit}</Text>
+                            <Text color="appMuted" fontSize="xs">
+                              до {new Date(b.expiresAt).toLocaleDateString('ru-RU')}
+                            </Text>
+                            <ExpiryBadge hours={b.hoursLeft} />
+                          </HStack>
                         ))}
                       </VStack>
                     )}
@@ -221,7 +223,6 @@ export default function StockPage() {
                                 borderBottom="1px solid" borderColor="appBorder"
                                 _last={{ borderBottom: 'none' }}
                               >
-                                <Text color="appMuted" fontSize="sm" w="80px">#{b.id}</Text>
                                 <Text color="appText" fontSize="sm" w="120px">{b.quantity.toFixed(2)} {b.unit}</Text>
                                 <Text color="appMuted" fontSize="sm" flex={1}>
                                   до {new Date(b.expiresAt).toLocaleString('ru-RU')}
