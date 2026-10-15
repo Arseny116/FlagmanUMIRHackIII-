@@ -24,8 +24,8 @@ function Row({ row, index, onChange, onRemove, canRemove, touched, products }) {
 
   const errors = {
     productId: touched && !row.productId ? 'Выберите продукт' : '',
-    quantity: touched && (!row.quantity || row.quantity <= 0) ? 'Должно быть > 0' : '',
-    shelfLifeHours: touched && (!row.shelfLifeHours || row.shelfLifeHours <= 0) ? 'Укажите срок' : '',
+    quantity: touched && (row.quantity === '' || Number(row.quantity) <= 0) ? 'Должно быть > 0' : '',
+    shelfLifeHours: touched && (row.shelfLifeHours === '' || Number(row.shelfLifeHours) <= 0) ? 'Укажите срок' : '',
   };
 
   return (
@@ -57,49 +57,51 @@ function Row({ row, index, onChange, onRemove, canRemove, touched, products }) {
 
       <FormControl isInvalid={!!errors.quantity} flex={1}>
         <FormLabel fontSize="xs" color="appMuted" mb={1}>Кол-во</FormLabel>
-        <NumberInput
+        <Input
+          type="text"
+          inputMode="decimal"
+          placeholder="0.0"
           value={row.quantity}
-          min={1}
-          step={1}
-          precision={0}
-          onChange={(v) => onChange(index, { quantity: Number(v) || 1 })}
-        >
-          <NumberInputField
-            bg="appBg"
-            borderColor="appBorder"
-            color="appText"
-            _hover={{ borderColor: 'appAccent' }}
-            _focus={{ borderColor: 'appAccent', boxShadow: 'none' }}
-          />
-          <NumberInputStepper>
-            <NumberIncrementStepper color="appMuted" borderColor="appBorder" />
-            <NumberDecrementStepper color="appMuted" borderColor="appBorder" />
-          </NumberInputStepper>
-        </NumberInput>
+          onChange={(e) => {
+            const v = e.target.value;
+            if (v === '') {
+              onChange(index, { quantity: '' });
+              return;
+            }
+            if (!/^\d*\.?\d*$/.test(v)) return;
+            onChange(index, { quantity: v });
+          }}
+          bg="appBg"
+          borderColor="appBorder"
+          color="appText"
+          _hover={{ borderColor: 'appAccent' }}
+          _focus={{ borderColor: 'appAccent', boxShadow: 'none' }}
+        />
         {errors.quantity && <FormErrorMessage fontSize="xs">{errors.quantity}</FormErrorMessage>}
       </FormControl>
 
       <FormControl isInvalid={!!errors.shelfLifeHours} flex={1}>
         <FormLabel fontSize="xs" color="appMuted" mb={1}>Срок, ч</FormLabel>
-        <NumberInput
-            value={row.quantity}
-            min={0.01}
-            step={0.1}
-            precision={2}
-            onChange={(v) => onChange(index, { quantity: Number(v) || 0.1 })}
-          >
-          <NumberInputField
-            bg="appBg"
-            borderColor="appBorder"
-            color="appText"
-            _hover={{ borderColor: 'appAccent' }}
-            _focus={{ borderColor: 'appAccent', boxShadow: 'none' }}
-          />
-          <NumberInputStepper>
-            <NumberIncrementStepper color="appMuted" borderColor="appBorder" />
-            <NumberDecrementStepper color="appMuted" borderColor="appBorder" />
-          </NumberInputStepper>
-        </NumberInput>
+        <Input
+          type="text"
+          inputMode="numeric"
+          placeholder="24"
+          value={row.shelfLifeHours}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (v === '') {
+              onChange(index, { shelfLifeHours: '' });
+              return;
+            }
+            if (!/^\d*$/.test(v)) return;
+            onChange(index, { shelfLifeHours: v });
+          }}
+          bg="appBg"
+          borderColor="appBorder"
+          color="appText"
+          _hover={{ borderColor: 'appAccent' }}
+          _focus={{ borderColor: 'appAccent', boxShadow: 'none' }}
+        />
         {errors.shelfLifeHours && <FormErrorMessage fontSize="xs">{errors.shelfLifeHours}</FormErrorMessage>}
       </FormControl>
 
@@ -139,7 +141,10 @@ function SupplyForm({ onCreated }) {
 
   const isValid = useMemo(() => {
     return rows.length > 0 && rows.every(
-      (r) => r.productId && r.quantity > 0 && r.shelfLifeHours > 0
+      (r) =>
+        r.productId &&
+        r.quantity !== '' && Number(r.quantity) > 0 && Number(r.quantity) <= 1000 &&
+        r.shelfLifeHours !== '' && Number(r.shelfLifeHours) > 0 && Number(r.shelfLifeHours) <= 8760
     );
   }, [rows]);
 

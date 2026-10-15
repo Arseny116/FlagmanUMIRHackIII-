@@ -16,6 +16,20 @@ import { ErrorState } from '../components/ErrorState';
 
 const EXPIRING_THRESHOLD = 48;
 
+const formatDate = (iso) => {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return '—';
+  }
+};
+
 export default function StockPage() {
   const [openId, setOpenId] = useState(null);
   const [search, setSearch] = useState('');
@@ -157,13 +171,17 @@ export default function StockPage() {
                     ) : (
                       <VStack align="stretch" spacing={2}>
                         {batchesQuery.data?.map((b) => (
-                          <HStack key={b.id} justify="space-between" fontSize="xs">
-                            <Text color="appText">{b.quantity.toFixed(2)} {b.unit}</Text>
+                          <VStack key={b.id} align="stretch" spacing={1}>
+                            <HStack justify="space-between">
+                              <Text color="appText" fontSize="sm" fontWeight="500">
+                                {b.quantity.toFixed(2)} {b.unit}
+                              </Text>
+                              <ExpiryBadge hours={b.hoursLeft} />
+                            </HStack>
                             <Text color="appMuted" fontSize="xs">
-                              до {new Date(b.expiresAt).toLocaleDateString('ru-RU')}
+                              до {formatDate(b.expiresAt)}
                             </Text>
-                            <ExpiryBadge hours={b.hoursLeft} />
-                          </HStack>
+                          </VStack>
                         ))}
                       </VStack>
                     )}
@@ -216,20 +234,28 @@ export default function StockPage() {
                           ) : batchesQuery.data?.length === 0 ? (
                             <Text color="appMuted" fontSize="sm">Нет активных партий</Text>
                           ) : (
-                            batchesQuery.data?.map((b) => (
-                              <Box
-                                key={b.id}
-                                display="flex" gap={4} align="center" py={2}
-                                borderBottom="1px solid" borderColor="appBorder"
-                                _last={{ borderBottom: 'none' }}
-                              >
-                                <Text color="appText" fontSize="sm" w="120px">{b.quantity.toFixed(2)} {b.unit}</Text>
-                                <Text color="appMuted" fontSize="sm" flex={1}>
-                                  до {new Date(b.expiresAt).toLocaleString('ru-RU')}
-                                </Text>
-                                <ExpiryBadge hours={b.hoursLeft} />
-                              </Box>
-                            ))
+                            <VStack align="stretch" spacing={2}>
+                              {batchesQuery.data?.map((b) => (
+                                <HStack
+                                  key={b.id}
+                                  justify="space-between"
+                                  py={2}
+                                  flexWrap="wrap"
+                                  gap={3}
+                                  borderBottom="1px solid"
+                                  borderColor="appBorder"
+                                  _last={{ borderBottom: 'none' }}
+                                >
+                                  <Text color="appText" fontSize="sm" fontWeight="500" minW="80px">
+                                    {b.quantity.toFixed(2)} {b.unit}
+                                  </Text>
+                                  <Text color="appMuted" fontSize="sm" flex={1} minW="150px">
+                                    до {formatDate(b.expiresAt)}
+                                  </Text>
+                                  <ExpiryBadge hours={b.hoursLeft} />
+                                </HStack>
+                              ))}
+                            </VStack>
                           )}
                         </Box>
                       </Collapse>
