@@ -1,8 +1,8 @@
 import {
   Box, Heading, Text, Spinner, Table, Thead, Tbody, Tr, Th, Td,
   Collapse, Icon, Input, InputGroup, InputLeftElement,
-  Select, Checkbox, HStack, VStack, Button, IconButton,
-  useBreakpointValue,
+  Select, Checkbox, HStack, VStack, Button,
+  useBreakpointValue, useColorModeValue,
 } from '@chakra-ui/react';
 import {
   ChevronDownIcon, ChevronRightIcon, SearchIcon, CloseIcon,
@@ -16,6 +16,20 @@ import { ErrorState } from '../components/ErrorState';
 
 const EXPIRING_THRESHOLD = 48;
 
+const formatDate = (iso) => {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return '—';
+  }
+};
+
 export default function StockPage() {
   const [openId, setOpenId] = useState(null);
   const [search, setSearch] = useState('');
@@ -23,6 +37,8 @@ export default function StockPage() {
   const [onlyExpiring, setOnlyExpiring] = useState(false);
 
   const isMobile = useBreakpointValue({ base: true, md: false });
+  const optionBg = useColorModeValue('#ffffff', '#1a1a1a');
+  const optionColor = useColorModeValue('#1a1a1a', '#e4e4e7');
 
   const stockQuery = useQuery({ queryKey: ['stock'], queryFn: api.getStock });
   const allBatchesQuery = useQuery({ queryKey: ['batches', 'all'], queryFn: () => api.getBatches() });
@@ -97,9 +113,9 @@ export default function StockPage() {
             _hover={{ borderColor: 'appAccent' }}
             _focus={{ borderColor: 'appAccent', boxShadow: 'none' }}
           >
-            <option value="name" style={{ background: '#1a1a1a' }}>По названию (А-Я)</option>
-            <option value="qty" style={{ background: '#1a1a1a' }}>По количеству (убыв.)</option>
-            <option value="expiry" style={{ background: '#1a1a1a' }}>По сроку (сначала истекающие)</option>
+            <option value="name" style={{ background: optionBg, color: optionColor }}>По названию (А-Я)</option>
+            <option value="qty" style={{ background: optionBg, color: optionColor }}>По количеству (убыв.)</option>
+            <option value="expiry" style={{ background: optionBg, color: optionColor }}>По сроку (сначала истекающие)</option>
           </Select>
 
           <Checkbox
@@ -155,11 +171,17 @@ export default function StockPage() {
                     ) : (
                       <VStack align="stretch" spacing={2}>
                         {batchesQuery.data?.map((b) => (
-                          <HStack key={b.id} justify="space-between" fontSize="xs">
-                            <Text color="appMuted">#{b.id.slice(0, 8)}</Text>
-                            <Text color="appText">{b.quantity.toFixed(2)} {b.unit}</Text>
-                            <ExpiryBadge hours={b.hoursLeft} />
-                          </HStack>
+                          <VStack key={b.id} align="stretch" spacing={1}>
+                            <HStack justify="space-between">
+                              <Text color="appText" fontSize="sm" fontWeight="500">
+                                {b.quantity.toFixed(2)} {b.unit}
+                              </Text>
+                              <ExpiryBadge hours={b.hoursLeft} />
+                            </HStack>
+                            <Text color="appMuted" fontSize="xs">
+                              до {formatDate(b.expiresAt)}
+                            </Text>
+                          </VStack>
                         ))}
                       </VStack>
                     )}
@@ -212,21 +234,28 @@ export default function StockPage() {
                           ) : batchesQuery.data?.length === 0 ? (
                             <Text color="appMuted" fontSize="sm">Нет активных партий</Text>
                           ) : (
-                            batchesQuery.data?.map((b) => (
-                              <Box
-                                key={b.id}
-                                display="flex" gap={4} align="center" py={2}
-                                borderBottom="1px solid" borderColor="appBorder"
-                                _last={{ borderBottom: 'none' }}
-                              >
-                                <Text color="appMuted" fontSize="sm" w="80px">#{b.id}</Text>
-                                <Text color="appText" fontSize="sm" w="120px">{b.quantity.toFixed(2)} {b.unit}</Text>
-                                <Text color="appMuted" fontSize="sm" flex={1}>
-                                  до {new Date(b.expiresAt).toLocaleString('ru-RU')}
-                                </Text>
-                                <ExpiryBadge hours={b.hoursLeft} />
-                              </Box>
-                            ))
+                            <VStack align="stretch" spacing={2}>
+                              {batchesQuery.data?.map((b) => (
+                                <HStack
+                                  key={b.id}
+                                  justify="space-between"
+                                  py={2}
+                                  flexWrap="wrap"
+                                  gap={3}
+                                  borderBottom="1px solid"
+                                  borderColor="appBorder"
+                                  _last={{ borderBottom: 'none' }}
+                                >
+                                  <Text color="appText" fontSize="sm" fontWeight="500" minW="80px">
+                                    {b.quantity.toFixed(2)} {b.unit}
+                                  </Text>
+                                  <Text color="appMuted" fontSize="sm" flex={1} minW="150px">
+                                    до {formatDate(b.expiresAt)}
+                                  </Text>
+                                  <ExpiryBadge hours={b.hoursLeft} />
+                                </HStack>
+                              ))}
+                            </VStack>
                           )}
                         </Box>
                       </Collapse>

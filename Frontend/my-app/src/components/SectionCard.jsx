@@ -12,6 +12,8 @@ export function SectionCard({ title, linkTo, linkLabel = 'Все', children }) {
       borderRadius="lg"
       display="flex"
       flexDirection="column"
+      transition="border-color 0.15s"
+      _hover={{ borderColor: 'appAccent' }}
     >
       <HStack justify="space-between" mb={4}>
         <Heading size="sm" color="appText" fontWeight="600">

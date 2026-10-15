@@ -68,13 +68,6 @@ export default function HotOffersPage() {
                     <Badge colorScheme={pr.scheme} fontSize="xs">
                       {pr.label}
                     </Badge>
-                    <Badge
-                      bg="transparent" color="appAccent"
-                      border="1px solid" borderColor="appAccent"
-                      fontSize="xs" px={2}
-                    >
-                      {offer.price} ₽
-                    </Badge>
                   </HStack>
                 </HStack>
 

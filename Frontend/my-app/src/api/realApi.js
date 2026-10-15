@@ -50,7 +50,6 @@ const adaptBatch = (b) => ({
 const adaptDish = (d) => ({
   id: d.id,
   name: d.name,
-  price: 0,
   composition: (d.recipeItems ?? []).map((r) => ({
     productId: r.productId,
     productName: r.productName ?? 'Неизвестно',
@@ -86,7 +85,6 @@ export async function getDishes() {
   return dishesRaw.map((d) => ({
     id: d.id,
     name: d.name,
-    price: 0,
     composition: (d.recipeItems ?? []).map((r) => {
       const product = stockMap.get(r.productId);
       return {
@@ -159,7 +157,7 @@ export async function getHotOffers() {
           );
         }
       }
-      return { id: dish.id, name: dish.name, price: dish.price ?? 0, score, reasons };
+      return { id: dish.id, name: dish.name, score, reasons };
     })
     .filter((d) => d.score > 0)
     .sort((a, b) => b.score - a.score);
@@ -218,7 +216,8 @@ export async function getSupplies() {
 }
 
 export async function getOrders() {
-  return [];
+  const raw = await request('/api/orders');
+  return raw.map(adaptOrder);
 }
 
 
