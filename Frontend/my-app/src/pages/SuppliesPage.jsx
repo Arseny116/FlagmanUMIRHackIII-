@@ -2,8 +2,10 @@ import {
   Box, Heading, Text, VStack, HStack, Button, Input, Select,
   NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper,
   NumberDecrementStepper, IconButton, Table, Thead, Tbody, Tr, Th, Td,
-  Divider, useToast, Skeleton, FormControl, FormErrorMessage, Spinner,
-  useBreakpointValue, FormLabel, useColorModeValue,
+  Divider, useToast, Skeleton, FormControl, FormLabel, FormErrorMessage, Spinner,
+  useBreakpointValue, useColorModeValue,
+  Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter,
+  ModalCloseButton, useDisclosure,
 } from '@chakra-ui/react';
 import { AddIcon, DeleteIcon, RepeatIcon } from '@chakra-ui/icons';
 import { useState, useMemo } from 'react';
@@ -120,9 +122,118 @@ function Row({ row, index, onChange, onRemove, canRemove, touched, products }) {
   );
 }
 
+function AddProductModal({ isOpen, onClose, onCreated }) {
+  const toast = useToast();
+  const [name, setName] = useState('');
+  const [unit, setUnit] = useState('кг');
+  const [touched, setTouched] = useState(false);
+
+  const createMutation = useMutation({
+    mutationFn: (body) => api.createProduct(body),
+    onSuccess: (product) => {
+      toast({
+        title: 'Продукт создан',
+        description: `${product.name} (${product.unit})`,
+        status: 'success',
+        duration: 3000,
+      });
+      setName('');
+      setUnit('кг');
+      setTouched(false);
+      onCreated?.();
+      onClose();
+    },
+    onError: (err) => {
+      toast({
+        title: 'Ошибка создания',
+        description: err.message,
+        status: 'error',
+        duration: 5000,
+      });
+    },
+  });
+
+  const errors = {
+    name: touched && !name.trim() ? 'Введите название' : '',
+    unit: touched && !unit.trim() ? 'Введите единицу' : '',
+  };
+
+  const handleSubmit = () => {
+    setTouched(true);
+    if (!name.trim() || !unit.trim()) return;
+    createMutation.mutate({ name: name.trim(), unit: unit.trim() });
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <ModalOverlay />
+      <ModalContent bg="cardBg" color="appText">
+        <ModalHeader color="appText">Новый продукт</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody>
+          <VStack align="stretch" spacing={4}>
+            <FormControl isInvalid={!!errors.name}>
+              <Text fontSize="sm" color="appMuted" mb={2}>Название</Text>
+              <Input
+                placeholder="Например, Грибы"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                bg="appBg" borderColor="appBorder" color="appText"
+                _hover={{ borderColor: 'appAccent' }}
+                _focus={{ borderColor: 'appAccent', boxShadow: 'none' }}
+              />
+              {errors.name && <FormErrorMessage fontSize="xs">{errors.name}</FormErrorMessage>}
+            </FormControl>
+
+            <FormControl isInvalid={!!errors.unit}>
+              <Text fontSize="sm" color="appMuted" mb={2}>Единица измерения</Text>
+              <Select
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                bg="appBg" borderColor="appBorder" color="appText"
+                _hover={{ borderColor: 'appAccent' }}
+                _focus={{ borderColor: 'appAccent', boxShadow: 'none' }}
+                sx={{
+                  '& option': {
+                    background: 'var(--chakra-colors-appBg)',
+                    color: 'var(--chakra-colors-appText)',
+                  },
+                }}
+              >
+                <option value="кг">кг</option>
+                <option value="г">г</option>
+                <option value="л">л</option>
+                <option value="мл">мл</option>
+                <option value="шт">шт</option>
+              </Select>
+              {errors.unit && <FormErrorMessage fontSize="xs">{errors.unit}</FormErrorMessage>}
+            </FormControl>
+          </VStack>
+        </ModalBody>
+
+        <ModalFooter>
+          <Button variant="ghost" color="appMuted" mr={3} onClick={onClose}>
+            Отмена
+          </Button>
+          <Button
+            bg="appAccent" color="white" _hover={{ opacity: 0.9 }}
+            isLoading={createMutation.isPending}
+            loadingText="Создаём..."
+            onClick={handleSubmit}
+          >
+            Создать
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
+}
+
 function SupplyForm({ onCreated }) {
   const toast = useToast();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const preselectedProductId = searchParams.get('productId') ?? '';
 
   const [number, setNumber] = useState(generateSupplyNumber());
@@ -197,13 +308,26 @@ function SupplyForm({ onCreated }) {
   return (
     <Box>
       <VStack align="stretch" spacing={3} mb={4}>
-        <HStack justify="space-between" mb={2}>
+        <HStack justify="space-between" mb={2} wrap="wrap" spacing={2}>
           <Heading size="sm" color="appText" fontWeight="600">
             Новая поставка
           </Heading>
-          <Text color="appMuted" fontSize="xs">
-            Номер можно оставить пустым — сгенерируется автоматически
-          </Text>
+          <HStack spacing={2}>
+            <Text color="appMuted" fontSize="xs">
+              Номер можно оставить пустым
+            </Text>
+            <Button
+              size="xs"
+              leftIcon={<AddIcon />}
+              variant="outline"
+              borderColor="appBorder"
+              color="appMuted"
+              _hover={{ color: 'appAccent', borderColor: 'appAccent' }}
+              onClick={onOpen}
+            >
+              Добавить продукт
+            </Button>
+          </HStack>
         </HStack>
 
         <FormControl>
@@ -281,6 +405,15 @@ function SupplyForm({ onCreated }) {
       >
         Оформить поставку
       </Button>
+
+      <AddProductModal
+        isOpen={isOpen}
+        onClose={onClose}
+        onCreated={() => {
+          queryClient.invalidateQueries({ queryKey: ['products'] });
+          queryClient.invalidateQueries({ queryKey: ['stock'] });
+        }}
+      />
     </Box>
   );
 }
@@ -365,6 +498,7 @@ export default function SuppliesPage() {
     queryClient.invalidateQueries({ queryKey: ['stoplist'] });
     queryClient.invalidateQueries({ queryKey: ['hotOffers'] });
     queryClient.invalidateQueries({ queryKey: ['alerts'] });
+    queryClient.invalidateQueries({ queryKey: ['products'] });
   };
 
   return (

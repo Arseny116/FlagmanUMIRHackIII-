@@ -98,15 +98,47 @@ export async function getDishes() {
 }
 
 export async function getProducts() {
-  const raw = await request('/api/stock');
-  return raw.map((s) => ({
-    id: s.productId,
-    name: s.name,
-    unit: s.unit === 'string' ? 'шт' : s.unit,
-  }));
+  try {
+    const raw = await request('/api/products');
+    if (Array.isArray(raw) && raw.length > 0) {
+      return raw.map((p) => ({
+        id: p.id,
+        name: p.name,
+        unit: p.unit ?? 'шт',
+      }));
+    }
+  } catch (err) {
+    console.warn('[PRODUCTS] /api/products недоступен:', err.message);
+  }
+
+  try {
+    const stock = await request('/api/stock');
+    if (Array.isArray(stock) && stock.length > 0) {
+      return stock.map((s) => ({
+        id: s.productId,
+        name: s.name,
+        unit: s.unit === 'string' ? 'шт' : s.unit,
+      }));
+    }
+  } catch (err) {
+    console.warn('[PRODUCTS] /api/stock недоступен:', err.message);
+  }
+
+  return SEED_PRODUCTS;
 }
 
 export async function getExpiring(hours = 24) {
+  try {
+    const raw = await request('/api/expiring');
+    if (Array.isArray(raw)) {
+      return raw
+        .map(adaptBatch)
+        .filter((b) => b.hoursLeft <= hours && !b.isExpired);
+    }
+  } catch (err) {
+    console.warn('[EXPIRING] /api/expiring недоступен:', err.message);
+  }
+
   const all = await getBatches();
   return all.filter((b) => b.hoursLeft <= hours && !b.isExpired);
 }
@@ -215,9 +247,26 @@ export async function getSupplies() {
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
 
+const adaptOrder = (o) => ({
+  id: o.id,
+  number: o.number ?? `#${(o.id ?? '').slice(0, 8)}`,
+  createdAt: o.createdAt ?? o.receivedAt,
+  status: o.status ?? 'оформлен',
+  items: o.items ?? [],
+});
+
 export async function getOrders() {
-  const raw = await request('/api/orders');
-  return raw.map(adaptOrder);
+  try {
+    const raw = await request('/api/orders');
+    if (Array.isArray(raw)) {
+      return raw.map(adaptOrder);
+    }
+  } catch (err) {
+    if (err.status !== 404) {
+      console.warn('[ORDERS] /api/orders недоступен:', err.message);
+    }
+  }
+  return [];
 }
 
 
@@ -287,6 +336,13 @@ export async function seedIfEmpty() {
 
 export async function createDish(body) {
   return request('/api/dishes', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function createProduct(body) {
+  return request('/api/products', {
     method: 'POST',
     body: JSON.stringify(body),
   });
