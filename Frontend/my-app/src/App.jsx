@@ -66,8 +66,18 @@ export default function App() {
         borderBottom="1px solid"
         borderColor="appBorder"
       >
-        <Heading size="md" color="appText" fontWeight="600" letterSpacing="tight">
-          Флагман: Мониторинг
+        <Heading
+            as={RouterLink}
+            to="/"
+            size="md"
+            color="appText"
+            fontWeight="600"
+            letterSpacing="tight"
+            cursor="pointer"
+            _hover={{ color: 'appAccent' }}
+            transition="color 0.15s"
+            >
+              Флагман: Мониторинг
         </Heading>
 
         <HStack
@@ -94,7 +104,7 @@ export default function App() {
           <Link as={RouterLink} to="/stoplist" color="appMuted" _hover={{ color: 'appAccent' }}>Стоп-лист</Link>
           <Link as={RouterLink} to="/alerts" color="appMuted" _hover={{ color: 'appAccent' }}>
             <HStack spacing={1}>
-              <Text>Алерты</Text>
+              <Text>Уведомления</Text>
               {alertsCount > 0 && (
                 <Badge colorScheme="red" fontSize="xs" borderRadius="full" px={2}>
                   {alertsCount}

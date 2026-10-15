@@ -156,10 +156,12 @@ export default function StockPage() {
                       <VStack align="stretch" spacing={2}>
                         {batchesQuery.data?.map((b) => (
                           <HStack key={b.id} justify="space-between" fontSize="xs">
-                            <Text color="appMuted">#{b.id.slice(0, 8)}</Text>
-                            <Text color="appText">{b.quantity.toFixed(2)} {b.unit}</Text>
-                            <ExpiryBadge hours={b.hoursLeft} />
-                          </HStack>
+                              <Text color="appText">{b.quantity.toFixed(2)} {b.unit}</Text>
+                              <Text color="appMuted" fontSize="xs">
+                                    до {new Date(b.expiresAt).toLocaleDateString('ru-RU')}
+                              </Text>
+                              <ExpiryBadge hours={b.hoursLeft} />
+                            </HStack>
                         ))}
                       </VStack>
                     )}

@@ -2,6 +2,8 @@ import {
   Box, Heading, Text, VStack, HStack, Button, Divider,
   IconButton, useToast, Badge, useBreakpointValue, Skeleton, Table,
   Thead, Tbody, Tr, Th, Td,
+  NumberInput, NumberInputField, NumberInputStepper,
+  NumberIncrementStepper, NumberDecrementStepper,
 } from '@chakra-ui/react';
 import { AddIcon, MinusIcon, DeleteIcon } from '@chakra-ui/icons';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
@@ -169,7 +171,7 @@ function CartSection() {
 
   return (
     <Box>
-      <VStack align="stretch" spacing={3} divider={<Divider borderColor="appBorder" />}>
+     <VStack align="stretch" spacing={3} divider={<Divider borderColor="appBorder" />}>
         {items.map((item) => (
           <Box key={item.dishId} py={2}>
             {isMobile ? (
@@ -182,35 +184,69 @@ function CartSection() {
                     isDisabled={isPending} onClick={() => remove(item.dishId)}
                   />
                 </HStack>
-                <HStack>
-                  <IconButton
-                    aria-label="Уменьшить" icon={<MinusIcon />} size="xs" variant="outline"
-                    borderColor="appBorder" color="appText" isDisabled={isPending}
-                    onClick={() => setQuantity(item.dishId, item.quantity - 1)}
+                <NumberInput
+                  size="xs"
+                  maxW="100px"
+                  min={1}
+                  step={1}
+                  precision={0}
+                  value={item.quantity}
+                  onChange={(v) => {
+                    const n = Number(v);
+                    if (Number.isFinite(n) && n > 0) {
+                      setQuantity(item.dishId, n);
+                    }
+                  }}
+                  isDisabled={isPending}
+                >
+                  <NumberInputField
+                    bg="appBg"
+                    borderColor="appBorder"
+                    color="appText"
+                    _hover={{ borderColor: 'appAccent' }}
+                    _focus={{ borderColor: 'appAccent', boxShadow: 'none' }}
+                    textAlign="center"
                   />
-                  <Text color="appText" minW="30px" textAlign="center">{item.quantity}</Text>
-                  <IconButton
-                    aria-label="Увеличить" icon={<AddIcon />} size="xs" variant="outline"
-                    borderColor="appBorder" color="appText" isDisabled={isPending}
-                    onClick={() => setQuantity(item.dishId, item.quantity + 1)}
-                  />
-                </HStack>
+                  <NumberInputStepper>
+                    <NumberIncrementStepper color="appMuted" borderColor="appBorder" />
+                    <NumberDecrementStepper color="appMuted" borderColor="appBorder" />
+                  </NumberInputStepper>
+                </NumberInput>
               </VStack>
             ) : (
               <HStack justify="space-between">
                 <Text color="appText" fontWeight="500" flex={1}>{item.name}</Text>
-                <HStack>
-                  <IconButton
-                    aria-label="Уменьшить" icon={<MinusIcon />} size="xs" variant="outline"
-                    borderColor="appBorder" color="appText" isDisabled={isPending}
-                    onClick={() => setQuantity(item.dishId, item.quantity - 1)}
-                  />
-                  <Text color="appText" minW="30px" textAlign="center">{item.quantity}</Text>
-                  <IconButton
-                    aria-label="Увеличить" icon={<AddIcon />} size="xs" variant="outline"
-                    borderColor="appBorder" color="appText" isDisabled={isPending}
-                    onClick={() => setQuantity(item.dishId, item.quantity + 1)}
-                  />
+
+                <HStack spacing={2}>
+                  <NumberInput
+                    size="xs"
+                    maxW="80px"
+                    min={1}
+                    step={1}
+                    precision={0}
+                    value={item.quantity}
+                    onChange={(v) => {
+                      const n = Number(v);
+                      if (Number.isFinite(n) && n > 0) {
+                        setQuantity(item.dishId, n);
+                      }
+                    }}
+                    isDisabled={isPending}
+                  >
+                    <NumberInputField
+                      bg="appBg"
+                      borderColor="appBorder"
+                      color="appText"
+                      _hover={{ borderColor: 'appAccent' }}
+                      _focus={{ borderColor: 'appAccent', boxShadow: 'none' }}
+                      textAlign="center"
+                    />
+                    <NumberInputStepper>
+                      <NumberIncrementStepper color="appMuted" borderColor="appBorder" />
+                      <NumberDecrementStepper color="appMuted" borderColor="appBorder" />
+                    </NumberInputStepper>
+                  </NumberInput>
+
                   <IconButton
                     aria-label="Удалить" icon={<DeleteIcon />} size="xs" variant="ghost"
                     color="appMuted" _hover={{ color: 'red.400' }}

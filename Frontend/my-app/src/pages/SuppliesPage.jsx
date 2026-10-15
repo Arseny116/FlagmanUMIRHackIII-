@@ -2,16 +2,16 @@ import {
   Box, Heading, Text, VStack, HStack, Button, Input, Select,
   NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper,
   NumberDecrementStepper, IconButton, Table, Thead, Tbody, Tr, Th, Td,
-  Divider, useToast, Skeleton, FormControl, FormErrorMessage, Spinner, useBreakpointValue,
+  Divider, useToast, Skeleton, FormControl, FormErrorMessage, Spinner,
+  useBreakpointValue, FormLabel, useColorModeValue,
 } from '@chakra-ui/react';
-import {  AddIcon, DeleteIcon, RepeatIcon  } from '@chakra-ui/icons';
+import { AddIcon, DeleteIcon, RepeatIcon } from '@chakra-ui/icons';
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
 import { useSearchParams } from 'react-router-dom';
-import { useColorModeValue } from '@chakra-ui/react';
 
 const emptyRow = () => ({ productId: '', quantity: 1, shelfLifeHours: 24 });
 
@@ -21,6 +21,7 @@ const generateSupplyNumber = () =>
 function Row({ row, index, onChange, onRemove, canRemove, touched, products }) {
   const optionBg = useColorModeValue('#ffffff', '#1a1a1a');
   const optionColor = useColorModeValue('#1a1a1a', '#e4e4e7');
+
   const errors = {
     productId: touched && !row.productId ? 'Выберите продукт' : '',
     quantity: touched && (!row.quantity || row.quantity <= 0) ? 'Должно быть > 0' : '',
@@ -30,8 +31,9 @@ function Row({ row, index, onChange, onRemove, canRemove, touched, products }) {
   return (
     <HStack align="flex-start" spacing={3}>
       <FormControl isInvalid={!!errors.productId} flex={2}>
+        <FormLabel fontSize="xs" color="appMuted" mb={1}>Продукт</FormLabel>
         <Select
-          placeholder="Продукт"
+          placeholder="Выберите"
           value={row.productId}
           onChange={(e) => onChange(index, { productId: e.target.value })}
           bg="appBg"
@@ -45,23 +47,24 @@ function Row({ row, index, onChange, onRemove, canRemove, touched, products }) {
               key={p.id}
               value={p.id}
               style={{ background: optionBg, color: optionColor }}
-              >
+            >
               {p.name} ({p.unit})
-              </option>
+            </option>
           ))}
         </Select>
         {errors.productId && <FormErrorMessage fontSize="xs">{errors.productId}</FormErrorMessage>}
       </FormControl>
 
       <FormControl isInvalid={!!errors.quantity} flex={1}>
+        <FormLabel fontSize="xs" color="appMuted" mb={1}>Кол-во</FormLabel>
         <NumberInput
           value={row.quantity}
-          min={0}
-          step={0.1}
-          onChange={(v) => onChange(index, { quantity: Number(v) })}
+          min={1}
+          step={1}
+          precision={0}
+          onChange={(v) => onChange(index, { quantity: Number(v) || 1 })}
         >
           <NumberInputField
-            placeholder="Кол-во"
             bg="appBg"
             borderColor="appBorder"
             color="appText"
@@ -77,14 +80,15 @@ function Row({ row, index, onChange, onRemove, canRemove, touched, products }) {
       </FormControl>
 
       <FormControl isInvalid={!!errors.shelfLifeHours} flex={1}>
+        <FormLabel fontSize="xs" color="appMuted" mb={1}>Срок, ч</FormLabel>
         <NumberInput
           value={row.shelfLifeHours}
           min={1}
           step={1}
-          onChange={(v) => onChange(index, { shelfLifeHours: Number(v) })}
+          precision={0}
+          onChange={(v) => onChange(index, { shelfLifeHours: Number(v) || 1 })}
         >
           <NumberInputField
-            placeholder="Срок, ч"
             bg="appBg"
             borderColor="appBorder"
             color="appText"
@@ -108,6 +112,7 @@ function Row({ row, index, onChange, onRemove, canRemove, touched, products }) {
         _hover={{ color: 'red.400' }}
         isDisabled={!canRemove}
         onClick={() => onRemove(index)}
+        mt={6}
       />
     </HStack>
   );
@@ -123,7 +128,7 @@ function SupplyForm({ onCreated }) {
     { productId: preselectedProductId, quantity: 1, shelfLifeHours: 24 },
   ]);
   const [touched, setTouched] = useState(false);
-  
+
   const productsQuery = useQuery({ queryKey: ['products'], queryFn: api.getProducts });
   const products = productsQuery.data ?? [];
 
@@ -167,19 +172,19 @@ function SupplyForm({ onCreated }) {
     if (!isValid) return;
 
     const items = rows.map((r) => {
-            const product = products.find((p) => p.id === r.productId);
-            return {
-                productId: r.productId,
-                name: product?.name ?? 'Неизвестно',
-                unit: product?.unit ?? 'шт',
-                quantity: Number(r.quantity),
-                shelfLifeHours: Number(r.shelfLifeHours),
-                };
-          });
+      const product = products.find((p) => p.id === r.productId);
+      return {
+        productId: r.productId,
+        name: product?.name ?? 'Неизвестно',
+        unit: product?.unit ?? 'шт',
+        quantity: Number(r.quantity),
+        shelfLifeHours: Number(r.shelfLifeHours),
+      };
+    });
 
     createMutation.mutate({
-      id: crypto.randomUUID(),                            
-      number: number.trim() || undefined,                 
+      id: crypto.randomUUID(),
+      number: number.trim() || undefined,
       items,
     });
   };
@@ -196,46 +201,53 @@ function SupplyForm({ onCreated }) {
           </Text>
         </HStack>
 
-        <HStack>
-  <Input
-    placeholder="Номер"
-    value={number}
-    onChange={(e) => setNumber(e.target.value)}
-    bg="appBg"
-    borderColor="appBorder"
-    color="appText"
-    flex={1}
-    _hover={{ borderColor: 'appAccent' }}
-    _focus={{ borderColor: 'appAccent', boxShadow: 'none' }}
-  />
-  <IconButton
-    aria-label="Сгенерировать номер"
-    icon={<RepeatIcon />}
-    variant="outline"
-    borderColor="appBorder"
-    color="appMuted"
-    _hover={{ color: 'appAccent', borderColor: 'appAccent' }}
-    onClick={() => setNumber(generateSupplyNumber())}
-  />
-</HStack>
+        <FormControl>
+          <FormLabel fontSize="xs" color="appMuted" mb={1}>Номер поставки</FormLabel>
+          <HStack>
+            <Input
+              value={number}
+              onChange={(e) => setNumber(e.target.value)}
+              bg="appBg"
+              borderColor="appBorder"
+              color="appText"
+              flex={1}
+              _hover={{ borderColor: 'appAccent' }}
+              _focus={{ borderColor: 'appAccent', boxShadow: 'none' }}
+            />
+            <IconButton
+              aria-label="Сгенерировать номер"
+              icon={<RepeatIcon />}
+              variant="outline"
+              borderColor="appBorder"
+              color="appMuted"
+              _hover={{ color: 'appAccent', borderColor: 'appAccent' }}
+              onClick={() => setNumber(generateSupplyNumber())}
+            />
+          </HStack>
+        </FormControl>
 
         <Divider borderColor="appBorder" my={2} />
 
         {productsQuery.isLoading ? (
           <HStack><Spinner size="sm" /><Text color="appMuted" fontSize="sm">Загрузка продуктов...</Text></HStack>
-            ) : productsQuery.error ? (
-            <ErrorState message={productsQuery.error.message} onRetry={() => productsQuery.refetch()} />
-            ) : (
-            <VStack align="stretch" spacing={3}>
+        ) : productsQuery.error ? (
+          <ErrorState message={productsQuery.error.message} onRetry={() => productsQuery.refetch()} />
+        ) : (
+          <VStack align="stretch" spacing={3}>
             {rows.map((row, i) => (
-            <Row
-                key={i} row={row} index={i}
-                onChange={updateRow} onRemove={removeRow}
-                canRemove={rows.length > 1} touched={touched} products={products}
-          />
-          ))}
+              <Row
+                key={i}
+                row={row}
+                index={i}
+                onChange={updateRow}
+                onRemove={removeRow}
+                canRemove={rows.length > 1}
+                touched={touched}
+                products={products}
+              />
+            ))}
           </VStack>
-          )}
+        )}
 
         <Button
           leftIcon={<AddIcon />}

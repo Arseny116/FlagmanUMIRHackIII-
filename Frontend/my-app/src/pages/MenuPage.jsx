@@ -148,9 +148,10 @@ function AddDishModal({ isOpen, onClose }) {
                     <FormControl flex={1}>
                       <NumberInput
                         value={it.quantity}
-                        min={0}
-                        step={0.05}
-                        onChange={(v) => updateItem(i, { quantity: Number(v) })}
+                        min={1}
+                        step={1}
+                        precision={0}
+                        onChange={(v) => updateItem(i, { quantity: Number(v) || 1 })}
                       >
                         <NumberInputField
                           placeholder="Кол-во"
