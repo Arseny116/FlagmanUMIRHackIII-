@@ -127,3 +127,4 @@ Frontend/my-app/src/
 ├── App.jsx       # Маршрутизация приложения
 └── main.jsx      # Точка входа React
 ```
+
