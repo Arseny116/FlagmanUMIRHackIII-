@@ -1,8 +1,8 @@
--запуск приложения :
--из папки с  docker-compose
--docker-compose up -d --build
--порт: http://localhost:80
--задеплоить не получилось ( серваки плак плак ( )
+- запуск приложения :
+- из папки с  docker-compose
+- docker-compose up -d --build
+- порт: http://localhost:80
+- задеплоить не получилось ( серваки плак плак ( )
 
 
 # FlagmanUMIRHackIII-
