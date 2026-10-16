@@ -14,12 +14,10 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    await app.ApplyMigrationsAsync();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
+
+await app.ApplyMigrationsAsync();
 
 app.MapEndpoints();
 app.Run();  
