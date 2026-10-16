@@ -16,4 +16,11 @@ internal sealed class ProductRepository(AppDbContext db) : IProductRepository
             .Where(p => idArray.Contains(p.Id))
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<List<Product>> GetAllAsync(CancellationToken cancellationToken = default) =>
+        await db.Products
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+    public void Add(Product product) => db.Products.Add(product);
 }

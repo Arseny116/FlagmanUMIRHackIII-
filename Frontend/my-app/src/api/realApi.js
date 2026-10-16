@@ -1,3 +1,7 @@
+import { SEED_PRODUCTS, SEED_DISHES, SEED_SUPPLY } from './seed';
+
+let seedPromise = null;
+
 async function request(path, options = {}) {
   const res = await fetch(path, {
     headers: { 'Content-Type': 'application/json' },
@@ -46,7 +50,6 @@ const adaptBatch = (b) => ({
 const adaptDish = (d) => ({
   id: d.id,
   name: d.name,
-  price: 0,
   composition: (d.recipeItems ?? []).map((r) => ({
     productId: r.productId,
     productName: r.productName ?? 'Неизвестно',
@@ -67,11 +70,75 @@ export async function getBatches(productId) {
 }
 
 export async function getDishes() {
-  const raw = await request('/api/dishes');
-  return raw.map(adaptDish);
+  const [dishesRaw, stock] = await Promise.all([
+    request('/api/dishes'),
+    request('/api/stock').catch(() => []),
+  ]);
+
+  const stockMap = new Map(
+    (stock ?? []).map((s) => [
+      s.productId,
+      { name: s.name, unit: s.unit === 'string' ? 'шт' : s.unit },
+    ])
+  );
+
+  return dishesRaw.map((d) => ({
+    id: d.id,
+    name: d.name,
+    composition: (d.recipeItems ?? []).map((r) => {
+      const product = stockMap.get(r.productId);
+      return {
+        productId: r.productId,
+        productName: product?.name ?? 'Неизвестно',
+        quantity: r.quantity,
+        unit: product?.unit ?? 'шт',
+      };
+    }),
+  }));
+}
+
+export async function getProducts() {
+  try {
+    const raw = await request('/api/products');
+    if (Array.isArray(raw) && raw.length > 0) {
+      return raw.map((p) => ({
+        id: p.id,
+        name: p.name,
+        unit: p.unit ?? 'шт',
+      }));
+    }
+  } catch (err) {
+    console.warn('[PRODUCTS] /api/products недоступен:', err.message);
+  }
+
+  try {
+    const stock = await request('/api/stock');
+    if (Array.isArray(stock) && stock.length > 0) {
+      return stock.map((s) => ({
+        id: s.productId,
+        name: s.name,
+        unit: s.unit === 'string' ? 'шт' : s.unit,
+      }));
+    }
+  } catch (err) {
+    console.warn('[PRODUCTS] /api/stock недоступен:', err.message);
+  }
+
+  return SEED_PRODUCTS;
 }
 
 export async function getExpiring(hours = 24) {
+  try {
+    const raw = await request('/api/expiring');
+    if (Array.isArray(raw)) {
+      return raw
+        .map(adaptBatch)
+        .filter((b) => b.hoursLeft <= hours && !b.isExpired);
+    }
+  } catch (err) {
+    console.warn('[EXPIRING] /api/expiring недоступен:', err.message);
+  }
+
   const all = await getBatches();
   return all.filter((b) => b.hoursLeft <= hours && !b.isExpired);
 }
@@ -101,7 +168,9 @@ export async function getStopList() {
 }
 
 export async function getHotOffers() {
-  const [dishes, batches, stoplist] = await Promise.all([getDishes(), getBatches(), getStopList()]);
+  const [dishes, batches, stoplist] = await Promise.all([
+    getDishes(), getBatches(), getStopList(),
+  ]);
   const stopIds = new Set(stoplist.map((d) => d.id));
 
   return dishes
@@ -120,7 +189,7 @@ export async function getHotOffers() {
           );
         }
       }
-      return { id: dish.id, name: dish.name, price: dish.price ?? 0, score, reasons };
+      return { id: dish.id, name: dish.name, score, reasons };
     })
     .filter((d) => d.score > 0)
     .sort((a, b) => b.score - a.score);
@@ -132,6 +201,25 @@ export async function createSupply(body) {
 
 export async function createOrder(body) {
   return request('/api/orders', { method: 'POST', body: JSON.stringify(body) });
+}
+
+export async function createOrderBatch(items) {
+  try {
+    const order = await request('/api/orders', {
+      method: 'POST',
+      body: JSON.stringify({ items }),
+    });
+    return { ok: true, orders: [order] };
+  } catch (err) {
+    if (err.status === 409 && err.body) {
+      return {
+        ok: false,
+        error: err.body.error ?? 'Не хватает ингредиентов',
+        missing: err.body.shortages ?? err.body.missing ?? [],
+      };
+    }
+    throw err;
+  }
 }
 
 export async function getSupplies() {
@@ -154,28 +242,108 @@ export async function getSupplies() {
     supply.totalQuantity += b.quantity;
   }
 
-  return [...map.values()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  return [...map.values()]
+    .filter((s) => s.number && s.number !== 'string')
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
 
+const adaptOrder = (o) => ({
+  id: o.id,
+  number: o.number ?? `#${(o.id ?? '').slice(0, 8)}`,
+  createdAt: o.createdAt ?? o.receivedAt,
+  status: o.status ?? 'оформлен',
+  items: o.items ?? [],
+});
+
 export async function getOrders() {
+  try {
+    const raw = await request('/api/orders');
+    if (Array.isArray(raw)) {
+      return raw.map(adaptOrder);
+    }
+  } catch (err) {
+    if (err.status !== 404) {
+      console.warn('[ORDERS] /api/orders недоступен:', err.message);
+    }
+  }
   return [];
 }
 
-export async function createOrderBatch(items) {
-  try {
-    const order = await request('/api/orders', {
-      method: 'POST',
-      body: JSON.stringify({ items }),
-    });
-    return { ok: true, orders: [order] };
-  } catch (err) {
-    if (err.status === 409 && err.body) {
-      return {
-        ok: false,
-        error: err.body.error ?? 'Не хватает ингредиентов',
-        missing: err.body.shortages ?? err.body.missing ?? [],
-      };
+
+export async function seedIfEmpty() {
+  if (seedPromise) return seedPromise;
+
+  seedPromise = (async () => {
+    let hasProducts = false;
+    try {
+      const stock = await request('/api/stock');
+      if (Array.isArray(stock) && stock.length > 0) {
+        hasProducts = true;
+        console.log(`[SEED] Продуктов уже: ${stock.length}`);
+      }
+    } catch (err) {
+      console.warn('[SEED] Не удалось проверить сток:', err.message);
     }
-    throw err;
-  }
+
+    if (!hasProducts) {
+      console.log('[SEED] Продуктов нет — создаю стартовую поставку');
+      try {
+        await createSupply({
+          id: crypto.randomUUID(),
+          number: `SUP-SEED-${Date.now()}`,
+          items: SEED_SUPPLY.items,
+        });
+        console.log('[SEED] Поставка создана');
+      } catch (err) {
+        console.warn('[SEED] Ошибка поставки:', err.message);
+      }
+    }
+
+    let existingDishes = [];
+    try {
+      existingDishes = await request('/api/dishes');
+    } catch (err) {
+      console.warn('[SEED] Не удалось проверить блюда:', err.message);
+    }
+
+    const existingNames = new Set((existingDishes ?? []).map((d) => d.name));
+
+    for (const dish of SEED_DISHES) {
+      if (existingNames.has(dish.name)) {
+        console.log(`[SEED] "${dish.name}" уже есть — пропускаю`);
+        continue;
+      }
+      try {
+        const res = await request('/api/dishes', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: dish.name,
+            recipeItems: dish.composition.map((c) => ({
+              productId: c.productId,
+              quantity: c.quantity,
+            })),
+          }),
+        });
+        console.log(`[SEED] Создано: ${dish.name} → ${res.id}`);
+      } catch (err) {
+        console.warn(`[SEED] Ошибка "${dish.name}":`, err.message);
+      }
+    }
+  })();
+
+  return seedPromise;
+}
+
+export async function createDish(body) {
+  return request('/api/dishes', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function createProduct(body) {
+  return request('/api/products', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
 }

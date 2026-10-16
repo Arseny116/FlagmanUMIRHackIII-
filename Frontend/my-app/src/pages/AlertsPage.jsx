@@ -1,5 +1,5 @@
 import {
-  Box, Heading, Text, VStack, HStack, Badge, Skeleton,
+  Box, Heading, Text, VStack, HStack, Skeleton,
   Button, ButtonGroup, Divider,
 } from '@chakra-ui/react';
 import { useQuery } from '@tanstack/react-query';
@@ -71,14 +71,9 @@ export default function AlertsPage() {
               spacing={3}
             >
               <VStack align="flex-start" spacing={1} flex={1} minW="200px">
-                <HStack>
-                  <Text color="appText" fontWeight="600">
-                    {b.productName}
-                  </Text>
-                  <Badge variant="subtle" colorScheme="gray" fontSize="xs">
-                    #{b.id}
-                  </Badge>
-                </HStack>
+                <Text color="appText" fontWeight="600">
+                  {b.productName}
+                </Text>
                 <Text color="appMuted" fontSize="sm">
                   {b.quantity.toFixed(2)} {b.unit} • до{' '}
                   {new Date(b.expiresAt).toLocaleString('ru-RU', {
@@ -90,13 +85,13 @@ export default function AlertsPage() {
               <HStack spacing={3}>
                 <ExpiryBadge hours={b.hoursLeft} />
                 <Button
-                    as={RouterLink}
-                    to={`/supplies?productId=${b.productId}`}
-                    size="sm"
-                    variant="outline"
-                    borderColor="appBorder"
-                    color="appMuted"
-                    _hover={{ color: 'appAccent', borderColor: 'appAccent' }}
+                  as={RouterLink}
+                  to={`/supplies?productId=${b.productId}`}
+                  size="sm"
+                  variant="outline"
+                  borderColor="appBorder"
+                  color="appMuted"
+                  _hover={{ color: 'appAccent', borderColor: 'appAccent' }}
                 >
                   Заказать поставку
                 </Button>

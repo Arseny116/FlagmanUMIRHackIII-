@@ -41,6 +41,15 @@ public static class OrderEndpoints
             };
         });
 
+        orders.MapGet("/", async(
+            IOrderService orderService,
+            CancellationToken cancellationToken
+            ) =>
+        {
+            var ordersHistory = await orderService.GetAllAsync(cancellationToken);
+            return Results.Ok(ordersHistory);
+        }
+        );
         return api;
     }
 

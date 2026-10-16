@@ -18,6 +18,8 @@ import AlertsPage from './pages/AlertsPage';
 import { useExpiryToasts } from './hooks/useExpiryToasts';
 import { useCart } from './context/useCart';
 import { api } from './api/client';
+import { seedIfEmpty } from './api/realApi';
+import { useEffect } from 'react';
 
 function ThemeToggle() {
   const { colorMode, toggleColorMode } = useColorMode();
@@ -39,6 +41,10 @@ function ThemeToggle() {
 export default function App() {
   useExpiryToasts();
   const { count } = useCart();
+  
+  useEffect(() => {
+    seedIfEmpty().catch((err) => console.warn('[SEED] Ошибка:', err));
+    }, []);
 
   const { data: alerts } = useQuery({
     queryKey: ['alerts', 24],
@@ -60,8 +66,18 @@ export default function App() {
         borderBottom="1px solid"
         borderColor="appBorder"
       >
-        <Heading size="md" color="appText" fontWeight="600" letterSpacing="tight">
-          Флагман: Мониторинг
+        <Heading
+            as={RouterLink}
+            to="/"
+            size="md"
+            color="appText"
+            fontWeight="600"
+            letterSpacing="tight"
+            cursor="pointer"
+            _hover={{ color: 'appAccent' }}
+            transition="color 0.15s"
+            >
+              Флагман: Мониторинг
         </Heading>
 
         <HStack
@@ -88,7 +104,7 @@ export default function App() {
           <Link as={RouterLink} to="/stoplist" color="appMuted" _hover={{ color: 'appAccent' }}>Стоп-лист</Link>
           <Link as={RouterLink} to="/alerts" color="appMuted" _hover={{ color: 'appAccent' }}>
             <HStack spacing={1}>
-              <Text>Алерты</Text>
+              <Text>Уведомления</Text>
               {alertsCount > 0 && (
                 <Badge colorScheme="red" fontSize="xs" borderRadius="full" px={2}>
                   {alertsCount}

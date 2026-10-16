@@ -1,5 +1,6 @@
 using Flagman.Domain.Abstractions;
 using Flagman.Domain.Model.Dish;
+using System.Text.Json.Serialization;
 namespace Flagman.Domain.Model.Order;
 
 public sealed class OrderItem : Entity
@@ -19,6 +20,8 @@ public sealed class OrderItem : Entity
     }
 
     public Guid OrderId { get; private set; }
+
+    [JsonIgnore]
     public Order Order { get; private set; }
 
     public Guid DishId { get; private set; }

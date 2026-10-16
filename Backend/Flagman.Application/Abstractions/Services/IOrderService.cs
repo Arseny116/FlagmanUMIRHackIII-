@@ -9,8 +9,13 @@ public interface IOrderService
     Task<Result<Order, Error>> CreateAsync(
         CreateOrderRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<List<Order>> GetAllAsync(
+        CancellationToken cancellationToken = default);
+        
 }
 
 public sealed record CreateOrderRequest(IReadOnlyList<OrderDishRequest>? Items);
+
 
 public sealed record OrderDishRequest(Guid DishId, decimal Quantity);

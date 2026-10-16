@@ -4,6 +4,8 @@ namespace Flagman.Domain.Abstractions;
 
 public interface IOrderRepository
 {
-    void Add(Order order);
-    void AddConsumption(OrderBatchConsumption consumption);
+    public void Add(Order order);
+    public void AddConsumption(OrderBatchConsumption consumption);
+
+    Task<List<Order>> GetAllAsync(CancellationToken cancellationToken = default);
 }
